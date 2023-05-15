@@ -98,51 +98,86 @@ class GuidedDiffusionLoader:
         return (model_settings,)
 
 
+class DiscoDiffusionExtraSettings:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+            "eta": ("FLOAT", { "default": 0.8, "min": 0, "max": 100 }),
+            "cutn": ("INT", { "default": 16, "min": 1, "max": 32 }),
+            "cutn_batches": ("INT", { "default": 2, "min": 1, "max": 16 }),
+            "cut_overview": ("STRING", { "default": "[12]*400+[4]*600" }),
+            "cut_innercut": ("STRING", { "default": "[4]*400+[12]*600" }),
+            "cut_ic_pow": ("STRING", { "default": "[1]*1000" }),
+            "cut_icgray_p": ("STRING", { "default": "[0.2]*400+[0]*600" }),
+        }}
+
+    # These are technically different model formats so don't use them with vanilla nodes!
+    RETURN_TYPES = ("DISCO_DIFFUSION_EXTRA_SETTINGS",)
+    FUNCTION = "make_settings"
+
+    CATEGORY = "sampling"
+
+    def __init__(self):
+        pass
+
+    def make_settings(self, eta, cutn, cutn_batches, cut_overview, cut_innercut, cut_ic_pow, cut_icgray_p):
+        extra_settings = {
+            "eta": eta,
+            "cutn": cutn,
+            "cutn_batches": cutn_batches,
+            "cut_overview": cut_overview,
+            "cut_innercut": cut_innercut,
+            "cut_ic_pow": cut_ic_pow,
+            "cut_icgray_p": cut_icgray_p
+        }
+
+        return (extra_settings,)
+
+
 DEFAULT_PROMPT = """\
-# How to prompt:
-# Each line is prefixed with the starting frame number of the prompt.
-# More than one line with the same frame number concatenates the two prompts together.
-# Each individual prompt can be no more than 77 characters long.
-# Weights are parsed from the end of each prompt with "25:a fluffy fox:5" syntax
-# Comments are written with the '#' character. Blank lines are ignored.
+; How to prompt:
+; Each line is prefixed with the starting frame number of the prompt.
+; More than one line with the same frame number concatenates the two prompts together.
+; Each individual prompt can be no more than 77 characters long.
+; Weights are parsed from the end of each prompt with "25:a fluffy fox:5" syntax
+; Comments are written with the ';' character. Blank lines are ignored.
 
 0:A beautiful painting of a singular lighthouse, shining its light across a tumultuous sea of blood by greg rutkowski and thomas kinkade. Trending on artstation.
 0:yellow color scheme
-#100:This set of prompts start at frame 100.
-#100:This prompt has weight five:5
+;100:This set of prompts start at frame 100.
+;100:This prompt has weight five:5
 """.strip()
 
 
 class DiscoDiffusion:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {"text": ("STRING", {"default": DEFAULT_PROMPT, "multiline": True}),
-                             "guided_diffusion": ("GUIDED_DIFFUSION_MODEL",),
-                             "clip": ("CLIP",),
-                             "clip_vision": ("CLIP_VISION",),
-                             # Sane defaults:
-                             # 1280x768 for 512x512 models
-                             # 512x448 for 256x256 models
-                             "width": ("INT", {"default": 1280, "min": 64, "max": 2048, "step": 64}),
-                             "height": ("INT", {"default": 768, "min": 64, "max": 2048, "step": 64}),
-                             "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
-                             "steps": ("INT", {"default": 250, "min": 1, "max": 10000}),
-                             "skip_steps": ("INT", {"default": 10, "min": 1, "max": 10000}),
-                             "n_batches": ("INT", {"default": 1, "min": 1, "max": 16}),
-                             # "max_frames": ("INT", {"default": 1, "min": 1, "max": 1000}),
-                             "sampling_mode": (["plms", "ddim", "stsp", "ltsp"], {"default": "ddim"}),
-                             "clip_guidance_scale": ("INT", { "default": 5000, "min": 1, "max": 10000000 }),
-                             "tv_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
-                             "range_scale": ("INT", { "default": 150, "min": 0, "max": 100000 }),
-                             "sat_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
-                             "eta": ("FLOAT", { "default": 0.8, "min": 0, "max": 100 }),
-                             "cutn": ("INT", { "default": 16, "min": 1, "max": 32 }),
-                             "cutn_batches": ("INT", { "default": 2, "min": 1, "max": 16 }),
-                             "cut_overview": ("STRING", { "default": "[12]*400+[4]*600" }),
-                             "cut_innercut": ("STRING", { "default": "[4]*400+[12]*600" }),
-                             "cut_ic_pow": ("STRING", { "default": "[1]*1000" }),
-                             "cut_icgray_p": ("STRING", { "default": "[0.2]*400+[0]*600" }),
-                             }}
+        return {
+            "required": {
+                "text": ("STRING", {"default": DEFAULT_PROMPT, "multiline": True}),
+                "guided_diffusion": ("GUIDED_DIFFUSION_MODEL",),
+                "clip": ("CLIP",),
+                "clip_vision": ("CLIP_VISION",),
+                # Sane defaults:
+                # 1280x768 for 512x512 models
+                # 512x448 for 256x256 models
+                "width": ("INT", {"default": 1280, "min": 64, "max": 2048, "step": 64}),
+                "height": ("INT", {"default": 768, "min": 64, "max": 2048, "step": 64}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "steps": ("INT", {"default": 250, "min": 1, "max": 10000}),
+                "skip_steps": ("INT", {"default": 10, "min": 1, "max": 10000}),
+                "n_batches": ("INT", {"default": 1, "min": 1, "max": 16}),
+                # "max_frames": ("INT", {"default": 1, "min": 1, "max": 1000}),
+                "sampling_mode": (["plms", "ddim", "stsp", "ltsp"], {"default": "ddim"}),
+                "clip_guidance_scale": ("INT", { "default": 5000, "min": 1, "max": 10000000 }),
+                "tv_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
+                "range_scale": ("INT", { "default": 150, "min": 0, "max": 100000 }),
+                "sat_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
+            },
+            "optional": {
+                "extra_settings": ("DISCO_DIFFUSION_EXTRA_SETTINGS",),
+            }
+        }
     RETURN_TYPES = ("IMAGE",)
     OUTPUT_IS_LIST = (True,)
     FUNCTION = "generate"
@@ -155,7 +190,7 @@ class DiscoDiffusion:
     def parse_prompts(self, text):
         result = {}
         for line in text.split('\n'):
-            line = line.split('#')[0].strip()
+            line = line.split(';')[0].strip()
             if line:
                 if ':' in line:
                     vals = line.split(':', 2)
@@ -199,7 +234,7 @@ class DiscoDiffusion:
             model.load_state_dict(torch.load(model_settings.custom_path, map_location='cpu'))
         else:
             model.load_state_dict(torch.load(f'{model_settings.model_path}/{model_settings.get_model_filename(model_settings.diffusion_model)}', map_location='cpu'))
-        model.requires_grad_(False).eval().to(device)
+            model.requires_grad_(False).eval().to(device)
 
         for name, param in model.named_parameters():
             if 'qkv' in name or 'norm' in name or 'proj' in name:
@@ -211,8 +246,7 @@ class DiscoDiffusion:
         return model, diffusion
 
     def generate(self, text, guided_diffusion, clip, clip_vision, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
-                 clip_guidance_scale, tv_scale, range_scale, sat_scale, eta,
-                 cutn, cutn_batches, cut_overview, cut_innercut, cut_ic_pow, cut_icgray_p):
+                 clip_guidance_scale, tv_scale, range_scale, sat_scale, extra_settings=None):
         settings = DiscoDiffusionSettings()
         settings.seed = seed
         settings.steps = steps
@@ -226,14 +260,16 @@ class DiscoDiffusion:
         settings.tv_scale = tv_scale
         settings.range_scale = range_scale
         settings.sat_scale = sat_scale
-        settings.eta = eta
-        settings.cutn = cutn
-        settings.cutn_batches = cutn_batches
-        settings.cut_overview = cut_overview
-        settings.cut_innercut = cut_innercut
-        settings.cut_ic_pow = cut_ic_pow
-        settings.cut_icgray_p = cut_icgray_p
         guided_diffusion.diffusion_sampling_mode = sampling_mode
+
+        if extra_settings is not None:
+            settings.eta = extra_settings["eta"]
+            settings.cutn = extra_settings["cutn"]
+            settings.cutn_batches = extra_settings["cutn_batches"]
+            settings.cut_overview = extra_settings["cut_overview"]
+            settings.cut_innercut = extra_settings["cut_innercut"]
+            settings.cut_ic_pow = extra_settings["cut_ic_pow"]
+            settings.cut_icgray_p = extra_settings["cut_icgray_p"]
 
         print("[Disco Diffusion] Parsed Prompts:")
         pp(settings.text_prompts)
@@ -250,13 +286,15 @@ class DiscoDiffusion:
 
 
 NODE_CLASS_MAPPINGS = {
-    "ComfyUI_OpenAICLIPLoader": OpenAICLIPLoader,
-    "ComfyUI_GuidedDiffusionLoader": GuidedDiffusionLoader,
-    "ComfyUI_DiscoDiffusion": DiscoDiffusion,
+    "DiscoDiffusion_OpenAICLIPLoader": OpenAICLIPLoader,
+    "DiscoDiffusion_GuidedDiffusionLoader": GuidedDiffusionLoader,
+    "DiscoDiffusion_DiscoDiffusion": DiscoDiffusion,
+    "DiscoDiffusion_DiscoDiffusionExtraSettings": DiscoDiffusionExtraSettings,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "ComfyUI_OpenAICLIPLoader": "OpenAI CLIP Loader",
-    "ComfyUI_GuidedDiffusionLoader": "Guided Diffusion Loader",
-    "ComfyUI_DiscoDiffusion": "Disco Diffusion",
+    "DiscoDiffusion_OpenAICLIPLoader": "OpenAI CLIP Loader",
+    "DiscoDiffusion_GuidedDiffusionLoader": "Guided Diffusion Loader",
+    "DiscoDiffusion_DiscoDiffusion": "Disco Diffusion",
+    "DiscoDiffusion_DiscoDiffusionExtraSettings": "Disco Diffusion Extra Settings",
 }

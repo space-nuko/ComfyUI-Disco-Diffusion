@@ -560,19 +560,19 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                     # tqdm.write(f'Batch {i}, step {j}, output {k}:')
                     datetime.now().strftime('%y%m%d-%H%M%S_%f')
                     percent = math.ceil(j/total_steps*100)
-                    if args.n_batches > 0:
-                        # if intermediates are saved to the subfolder, don't append a step or percentage to the name
-                        if cur_t == -1 and args.intermediates_in_subfolder is True:
-                            save_num = f'{frame_num:04}' if args.animation_mode != "None" else i
-                            filename = f'{args.batch_name}({batchNum})_{save_num}.png'
-                        else:
-                            # If we're working with percentages, append it
-                            if args.steps_per_checkpoint is not None:
-                                filename = f'{args.batch_name}({batchNum})_{i:04}-{percent:02}%.png'
-                            # Or else, iIf we're working with specific steps, append those
-                            else:
-                                filename = f'{args.batch_name}({batchNum})_{i:04}-{j:03}.png'
-                    save_image(image, j, cur_t, filename, frame_num, midas_model, midas_transform, args)
+                    # if args.n_batches > 0:
+                    #     # if intermediates are saved to the subfolder, don't append a step or percentage to the name
+                    #     if cur_t == -1 and args.intermediates_in_subfolder is True:
+                    #         save_num = f'{frame_num:04}' if args.animation_mode != "None" else i
+                    #         filename = f'{args.batch_name}({batchNum})_{save_num}.png'
+                    #     else:
+                    #         # If we're working with percentages, append it
+                    #         if args.steps_per_checkpoint is not None:
+                    #             filename = f'{args.batch_name}({batchNum})_{i:04}-{percent:02}%.png'
+                    #         # Or else, iIf we're working with specific steps, append those
+                    #         else:
+                    #             filename = f'{args.batch_name}({batchNum})_{i:04}-{j:03}.png'
+                    # save_image(image, j, cur_t, filename, frame_num, midas_model, midas_transform, args)
 
                     if cur_t == -1:
                         # We get back a tensor of size [C, H, W].
@@ -580,7 +580,11 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                         # So... Let's Transposing!
                         image = image.permute(1, 2, 0).add(1).div(2).clamp(0, 1)
                         # image = image.add(1).div(2).clamp(0, 1)
+
                         # [[H, W, C]] -> [B, H, W, C]
+                        # All results will be wrapped in a Python list for use with OUTPUT_IS_LIST.
+                        # B will always be 1 for each individual image tensor.
+                        # Yes this is weird.
                         results.append(torch.stack([image]))
 
         # plt.plot(np.array(loss_values), 'r')
