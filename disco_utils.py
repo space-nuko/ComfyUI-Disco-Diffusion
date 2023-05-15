@@ -185,33 +185,22 @@ def alpha_sigma_to_t(alpha, sigma):
 normalize = T.Normalize(mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
 
 
-def module_exists(module_name):
-  return importlibutil.find_spec(module_name)
-
-def gitclone(url, targetdir=None):
-    if targetdir:
-        res = subprocess.run(['git', 'clone', url, targetdir], stdout=subprocess.PIPE).stdout.decode('utf-8')
-    else:
-        res = subprocess.run(['git', 'clone', url], stdout=subprocess.PIPE).stdout.decode('utf-8')
-    print(res)
-
-def pipi(modulestr):
-  res = subprocess.run(['pip', 'install', modulestr], stdout=subprocess.PIPE).stdout.decode('utf-8')
-  print(res)
-
-def pipie(modulestr):
-  res = subprocess.run(['git', 'install', '-e', modulestr], stdout=subprocess.PIPE).stdout.decode('utf-8')
-  print(res)
-
-def pyget(url, path=None, filename=None):
+def pyget(url, path=None, filename=None, progress=True):
     try:
-        response = requests.get(url)
+        response = requests.get(url, stream=True)
         response.raise_for_status()
         parsed_url = urlparse(url)
         filename = filename if filename else os.path.basename(parsed_url.path)
         path = os.path.join(path, filename) if path else filename
+        total_size_in_bytes = int(response.headers.get('content-length', 0))
+        pbar = None
+        if progress:
+            pbar = comfy.utils.ProgressBar(total_size_in_bytes)
         with open(path, 'wb') as file:
-            file.write(response.content)
+            for chunk in response.iter_content(1024):
+                if progress:
+                    pbar.update(len(chunk))
+                file.write(chunk)
         if os.path.exists(path):
             return True
         else:

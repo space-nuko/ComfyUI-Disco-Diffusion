@@ -136,7 +136,8 @@ class ModelSettings:
 
             if not diff_model_map[diffusion_model_name]['downloaded']:
                 for model_uri in diff_model_map[diffusion_model_name]['uri_list']:
-                    disco_utils.pyget(model_uri, self.model_path)
+                    print(f'{diffusion_model_name} model downloading...')
+                    disco_utils.pyget(model_uri, self.model_path, progress=True)
                     if os.path.exists(model_local_path):
                         diff_model_map[diffusion_model_name]['downloaded'] = True
                         return
