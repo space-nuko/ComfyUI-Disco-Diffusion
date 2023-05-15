@@ -218,3 +218,10 @@ def pyget(url, path=None, filename=None):
             print(f"Unable to save file to: {path}")
     except requests.exceptions.HTTPError as errh:
         print(f"HTTP Error: ({url}): {errh}")
+    except requests.exceptions.ConnectionError as errc:
+        print(f"Connection Error: ({url}): {errc}")
+    except requests.exceptions.Timeout as errt:
+        print(f"Timeout Error: ({url}): {errt}")
+    except requests.exceptions.RequestException as err:
+        print(f"Request Exception: ({url}): {err}")
+    return False
