@@ -43,7 +43,7 @@ from .do_run import do_run
 # !! }}
 #@title Do the Run!
 #@markdown `n_batches` ignored with animation modes.
-def diffuse(clip, clip_vision, args: DiscoDiffusionSettings, batchNum):
+def diffuse(clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
     args.display_rate = 20 #@param{type: 'number'}
     args.n_batches = 50 #@param{type: 'number'}
 
@@ -57,8 +57,6 @@ def diffuse(clip, clip_vision, args: DiscoDiffusionSettings, batchNum):
         'timestep_respacing': timestep_respacing,
         'diffusion_steps': diffusion_steps,
     })
-
-    args.batch_size = 1
 
     def move_files(start_num, end_num, old_folder, new_folder):
         for i in range(start_num, end_num):
@@ -271,7 +269,7 @@ def diffuse(clip, clip_vision, args: DiscoDiffusionSettings, batchNum):
     gc.collect()
     torch.cuda.empty_cache()
     try:
-        do_run(diffusion, model, clip, clip_vision, args, batchNum)
+        do_run(diffusion, model, clip_model, clip_vision, args, batchNum)
     except KeyboardInterrupt:
         pass
     finally:

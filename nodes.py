@@ -12,16 +12,45 @@ sys.path.append(os.path.join(DISCO_DIFFUSION_ROOT, "guided-diffusion"))
 sys.path.append(os.path.join(DISCO_DIFFUSION_ROOT, "RAFT/core"))
 
 
-from .CLIP import clip
 from .settings import DiscoDiffusionSettings
 from .model_settings import ModelSettings
 from .diffuse import diffuse
+
+
+# class DiscoDiffusionCLIPLoader:
+#     """
+#     Loader for CLIP models compatible with Disco Diffusion (VIT-B)
+#     """
+
+#     @classmethod
+#     def INPUT_TYPES(s):
+#         return {"required": { "clip_model_name": (folder_paths.get_filename_list("style_models"), )}}
+
+#     RETURN_TYPES = ()
+#     FUNCTION = "generate"
+
+#     CATEGORY = "sampling"
+
+#     OUTPUT_NODE = True
+
+#     def __init__(self):
+#         self.settings = DiscoDiffusionSettings()
+#         self.model_settings = ModelSettings()
+#         self.settings.setup(self.model_settings)
+#         self.model_settings.setup(self.settings)
+
+#     def generate(self, clip, clip_vision, text, seed):
+#         device = comfy.model_management.get_torch_device()
+#         diffuse(clip, clip_vision, self.settings, 0)
+#         return { "ui": { "images": {} } }
 
 
 class DiscoDiffusion:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {"text": ("STRING", {"multiline": True}),
+                             "clip": ("CLIP",),
+                             "clip_vision": ("CLIP_VISION",),
                              "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                              }}
     RETURN_TYPES = ()
@@ -37,10 +66,9 @@ class DiscoDiffusion:
         self.settings.setup(self.model_settings)
         self.model_settings.setup(self.settings)
 
-    def generate(self, text, seed):
+    def generate(self, clip, clip_vision, text, seed):
         device = comfy.model_management.get_torch_device()
-        clip_model = clip.load('ViT-B/32', jit=False)[0].eval().requires_grad_(False).to(device)
-        diffuse(clip_model, clip_model, self.settings, 0)
+        diffuse(clip, clip_vision, self.settings, 0)
         return { "ui": { "images": {} } }
 
 

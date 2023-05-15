@@ -48,6 +48,7 @@ class DiscoDiffusionSettings:
         # !! }}
         # @markdown ####**Basic Settings:**
         self.batch_name = 'TimeToDisco'  # @param{type: 'string'}
+        self.batch_size = 1
         # @param [25,50,100,150,250,500,1000]{type: 'raw', allow-input: true}
         self.steps = 250
         self.width_height_for_512x512_models = [

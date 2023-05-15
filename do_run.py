@@ -36,6 +36,16 @@ from .settings import DiscoDiffusionSettings
 stop_on_next_loop = False
 TRANSLATION_SCALE = 1.0/200.0
 
+def encode_text(clip_model, prompt):
+    _, pooled = clip_model.encode_from_tokens(clip_model.tokenize(prompt), return_pooled=True)
+    return pooled.float()
+
+def encode_images(clip_vision, images):
+    imgs = torch.clip((255. * images), 0, 255).round().int()
+    inputs = clip_vision.processor(images=imgs, return_tensors="pt")
+    outputs = clip_vision.model(**inputs)
+    return outputs.image_embeds.float()
+
 def do_3d_step(args: DiscoDiffusionSettings, img_filepath, frame_num, midas_model, midas_transform):
     if args.key_frames:
         translation_x = args.translation_x_series[frame_num]
@@ -92,7 +102,7 @@ def id(x):
     return x
 
 
-def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, batchNum):
+def do_run(diffusion, model, clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
     seed = args.seed
     print(range(args.start_frame, args.max_frames))
 
@@ -283,7 +293,11 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
 
         print(f'Frame {frame_num} Prompt: {frame_prompt}')
 
-        clip_models = [clip_]  # TODO!!!!!!!!!!!!!!!!!!!!!
+        # from .CLIP import clip as openai_clip
+        # clip_model = openai_clip.load('ViT-B/32', jit=False)[0].eval().requires_grad_(False).to(device)
+        # clip_vision = clip_model
+
+        clip_models = [clip_model]  # TODO!!!!!!!!!!!!!!!!!!!!!
 
         model_stats = []
         for clip_model in clip_models:
@@ -296,8 +310,9 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
             for prompt in frame_prompt:
                 prompt = ", ".join(prompt)
                 txt, weight = disco_utils.parse_prompt(prompt)
+                txt = encode_text(clip_model, prompt).to(device)
                 # txt = clip_model.encode(prompt).float()
-                txt = clip_model.encode_text(clip.tokenize(prompt).to(device)).float()
+                # txt = clip_model.encode_text(openai_clip.tokenize(prompt).to(device)).float()
 
                 if args.fuzzy_prompt:
                     for i in range(25):
@@ -310,7 +325,7 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
 
             if image_prompt:
                 model_stat["make_cutouts"] = MakeCutouts(
-                    clip_model.visual.input_resolution, cutn, skip_augs=args.skip_augs)
+                    clip_vision.model.config.image_size, cutn, skip_augs=args.skip_augs)
                 for prompt in image_prompt:
                     path, weight = disco_utils.parse_prompt(prompt)
                     img = Image.open(disco_utils.fetch(path)).convert('RGB')
@@ -318,8 +333,7 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
                         img, min(args.side_x, args.side_y, *img.size), T.InterpolationMode.LANCZOS)
                     batch = model_stat["make_cutouts"](TF.to_tensor(
                         img).to(device).unsqueeze(0).mul(2).sub(1))
-                    embed = clip_vision.encode_image(
-                        disco_utils.normalize(batch)).float()
+                    embed = encode_images(clip_vision, disco_utils.normalize(batch))
                     if args.fuzzy_prompt:
                         for i in range(25):
                             model_stat["target_embeds"].append(
@@ -379,8 +393,9 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
                         t_int = int(t.item())+1
                         # when using SLIP Base model the dimensions need to be hard coded to avoid AttributeError: 'VisionTransformer' object has no attribute 'input_resolution'
                         try:
-                            input_resolution = model_stat["clip_model"].visual.input_resolution
-                        except:
+                            input_resolution = model_stat["clip_vision_model"].model.config.image_size
+                        except Exception as err:
+                            print("Couldn't find clip vision image size! " + str(err))
                             input_resolution = 224
 
                         cuts = MakeCutoutsDango(animation_mode=args.animation_mode,
@@ -393,8 +408,12 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
                                                 )
                         clip_in = disco_utils.normalize(
                             cuts(x_in.add(1).div(2)))
-                        image_embeds = model_stat["clip_vision_model"].encode_image(
-                            clip_in).float()
+                        image_embeds = encode_images(model_stat["clip_vision_model"], clip_in).to(device)
+                        # image_embeds = model_stat["clip_model"].encode_image(clip_in).float()
+                        print(image_embeds.shape)
+                        print(model_stat["target_embeds"].shape)
+                        print(image_embeds.unsqueeze(1).shape)
+                        print(model_stat["target_embeds"].unsqueeze(0).shape)
                         dists = disco_utils.spherical_dist_loss(image_embeds.unsqueeze(
                             1), model_stat["target_embeds"].unsqueeze(0))
                         dists = dists.view(
@@ -405,7 +424,7 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
                         loss_values.append(losses.sum().item())
                         x_in_grad += torch.autograd.grad(losses.sum() * args.clip_guidance_scale, x_in)[
                             0] / args.cutn_batches
-                tv_losses = args.tv_loss(x_in)
+                tv_losses = disco_utils.tv_loss(x_in)
                 if args.MS.use_secondary_model is True:
                     range_losses = disco_utils.range_loss(out)
                 else:
@@ -490,7 +509,7 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
             # with run_display:
             # display.clear_output(wait=True)
             for j, sample in enumerate(samples):
-                pbar.update_absolute(j, len(samples))
+                pbar.update_absolute(j, diffusion.num_timesteps - skip_steps)
                 cur_t -= 1
                 intermediateStep = False
                 if args.steps_per_checkpoint is not None:
@@ -563,7 +582,7 @@ def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, b
 
                                 if args.vr_mode:
                                     generate_eye_views(
-                                        TRANSLATION_SCALE, args.batchFolder, filename, frame_num, midas_model, midas_transform)
+                                        args, TRANSLATION_SCALE, args.batchFolder, filename, frame_num, midas_model, midas_transform)
 
                             # if frame_num != args.max_frames-1:
                             #   display.clear_output()
