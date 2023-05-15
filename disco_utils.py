@@ -18,6 +18,9 @@ import torchvision.transforms.functional as TF
 import subprocess
 from importlib import util as importlibutil
 import numpy as np
+import os
+import requests
+from urllib.parse import urlparse
 
 import comfy.model_management
 
@@ -200,6 +203,18 @@ def pipie(modulestr):
   res = subprocess.run(['git', 'install', '-e', modulestr], stdout=subprocess.PIPE).stdout.decode('utf-8')
   print(res)
 
-def wget(url, outputdir):
-  res = subprocess.run(['wget', url, '-P', f'{outputdir}'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-  print(res)
+def pyget(url, path=None, filename=None):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        parsed_url = urlparse(url)
+        filename = filename if filename else os.path.basename(parsed_url.path)
+        path = os.path.join(path, filename) if path else filename
+        with open(path, 'wb') as file:
+            file.write(response.content)
+        if os.path.exists(path):
+            return True
+        else:
+            print(f"Unable to save file to: {path}")
+    except requests.exceptions.HTTPError as errh:
+        print(f"HTTP Error: ({url}): {errh}")
