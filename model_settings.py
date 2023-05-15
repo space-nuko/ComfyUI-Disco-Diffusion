@@ -31,7 +31,18 @@ import comfy.model_management
 diff_model_map = {
     '256x256_diffusion_uncond': { 'downloaded': False, 'sha': 'a37c32fffd316cd494cf3f35b339936debdc1576dad13fe57c42399a5dbc78b1', 'uri_list': ['https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt', 'https://www.dropbox.com/s/9tqnqo930mpnpcn/256x256_diffusion_uncond.pt'] },
     '512x512_diffusion_uncond_finetune_008100': { 'downloaded': False, 'sha': '9c111ab89e214862b76e1fa6a1b3f1d329b1a88281885943d2cdbe357ad57648', 'uri_list': ['https://huggingface.co/lowlevelware/512x512_diffusion_unconditional_ImageNet/resolve/main/512x512_diffusion_uncond_finetune_008100.pt', 'https://the-eye.eu/public/AI/models/512x512_diffusion_unconditional_ImageNet/512x512_diffusion_uncond_finetune_008100.pt'] },
+
+    'concept_art_generator_v000-1_alpha': { 'downloaded': False, 'sha': '0c0394148b4fb56234baee533c36f17202b8f936f28427a957f342aa2f18d040', 'uri_list': ['https://huggingface.co/WAS/concept_art_generator/resolve/main/concept_art_generator_v000-1_alpha.pt'] },
+    'concept_art_generator_v000-2_alpha': { 'downloaded': False, 'sha': 'a7aee6b8dd73b6f3d377a8c579b99ed2922fc472ead16238074e08bf7517d075', 'uri_list': ['https://huggingface.co/WAS/concept_art_generator/resolve/main/concept_art_generator_v000-2_alpha.pt'] },
+
     'portrait_generator_v001': { 'downloaded': False, 'sha': 'b7e8c747af880d4480b6707006f1ace000b058dd0eac5bb13558ba3752d9b5b9', 'uri_list': ['https://huggingface.co/felipe3dartist/portrait_generator_v001/resolve/main/portrait_generator_v001_ema_0.9999_1MM.pt'] },
+    'portrait_generator_v002': { 'downloaded': False, 'sha': '3bc39e28fd9690dafbbee83cc08d089a3640eca8ed4d14280c4a9d342c56fd7f', 'uri_list': ['https://huggingface.co/WAS/portrait-diffusion/resolve/main/ema_0.9999_165000.pt'] },
+    'portrait_generator_v003': { 'downloaded': False, 'sha': 'c0e1739731efe682f6429f2f7f905104b602b415ef8bf0b507034cce6050e8e3', 'uri_list': ['https://huggingface.co/WAS/portrait-diffusion/resolve/main/ema_0.9999_430000.pt'] },
+    'portrait_generator_v004': { 'downloaded': False, 'sha': '09daed35b70670b8491f27ef172e2a62f08f3a78326aeb88d23cade1fbb878ab', 'uri_list': ['https://huggingface.co/WAS/portrait-diffusion/resolve/main/ema_0.9999_080000.pt'] },
+    'portrait_generator_v005': { 'downloaded': False, 'sha': '47a9e2cb9ddc9ca9adf9a6bde90c5107c74828b02fe7300bcf0a7d0fb30d5abc', 'uri_list': ['https://huggingface.co/felipe3dartist/Portrait_generator_V2.0/resolve/main/portrait_generator_v2.pt'] },
+
+    'Architecture_Diffusion_1-5m': { 'downloaded': False, 'sha': '9a82579a5490e06fde5ff8ac9a37082f66ce10bb03f434b047596f6526ffd95e', 'uri_list': ['https://huggingface.co/jerostephan/Architecture_Diffusion_1.5M/resolve/main/Architecture_Diffusion_1.5M.pt'] },
+
     'pixelartdiffusion_expanded': { 'downloaded': False, 'sha': 'a73b40556634034bf43b5a716b531b46fb1ab890634d854f5bcbbef56838739a', 'uri_list': ['https://huggingface.co/KaliYuga/PADexpanded/resolve/main/PADexpanded.pt'] },
     'pixel_art_diffusion_hard_256': { 'downloaded': False, 'sha': 'be4a9de943ec06eef32c65a1008c60ad017723a4d35dc13169c66bb322234161', 'uri_list': ['https://huggingface.co/KaliYuga/pixel_art_diffusion_hard_256/resolve/main/pixel_art_diffusion_hard_256.pt'] },
     'pixel_art_diffusion_soft_256': { 'downloaded': False, 'sha': 'd321590e46b679bf6def1f1914b47c89e762c76f19ab3e3392c8ca07c791039c', 'uri_list': ['https://huggingface.co/KaliYuga/pixel_art_diffusion_soft_256/resolve/main/pixel_art_diffusion_soft_256.pt'] },
@@ -39,9 +50,20 @@ diff_model_map = {
     'watercolordiffusion_2': { 'downloaded': False, 'sha': '49c281b6092c61c49b0f1f8da93af9b94be7e0c20c71e662e2aa26fee0e4b1a9', 'uri_list': ['https://huggingface.co/KaliYuga/watercolordiffusion_2/resolve/main/watercolordiffusion_2.pt'] },
     'watercolordiffusion': { 'downloaded': False, 'sha': 'a3e6522f0c8f278f90788298d66383b11ac763dd5e0d62f8252c962c23950bd6', 'uri_list': ['https://huggingface.co/KaliYuga/watercolordiffusion/resolve/main/watercolordiffusion.pt'] },
     'PulpSciFiDiffusion': { 'downloaded': False, 'sha': 'b79e62613b9f50b8a3173e5f61f0320c7dbb16efad42a92ec94d014f6e17337f', 'uri_list': ['https://huggingface.co/KaliYuga/PulpSciFiDiffusion/resolve/main/PulpSciFiDiffusion.pt'] },
+
+    'Liminal_Diffusion_v1': { 'downloaded': False, 'sha': '87c36b544a367fceb0ca127d0028cd8a6f6b6e069e529b22999259d69c14f042', 'uri_list': ['https://huggingface.co/BrainArtLabs/liminal_diffusion/resolve/main/liminal_diffusion_v1.pt'] },
+    'Liminal_Diffusion_Source': { 'downloaded': False, 'sha': 'ce0064b8cea56c8adb4e5aa0ee2d02f65cd8f1baa905cc6504f462f1aac6d6f4', 'uri_list': ['https://huggingface.co/BrainArtLabs/liminal_diffusion/resolve/main/liminal_diffusion_source.pt'] },
+    'Medieval_Diffusion': { 'downloaded': False, 'sha': '1b66a0c9749f88b2d9124af7a3ba5c12d2645ffcc33356326269ccda8643a01b', 'uri_list': ['https://huggingface.co/KaliYuga/medievaldiffusion/resolve/main/medievaldiffusion.pt'] },
+    'Lithography_Diffusion': { 'downloaded': False, 'sha': 'a3e6522f0c8f278f90788298d66383b11ac763dd5e0d62f8252c962c23950bd6', 'uri_list': ['https://huggingface.co/KaliYuga/lithographydiffusion/resolve/main/lithographydiffusion.pt'] },
+    'Floral_Diffusion': { 'downloaded': False, 'sha': '197e9068f1ca0248fd89f9d6ca1f6f851783e04fddd0cc5b0020bfa655ed3aeb', 'uri_list': ['https://huggingface.co/jags/floraldiffusion/resolve/main/floraldiffusion.pt', 'https://www.dropbox.com/s/i0xrhq28ls1e94g/floraldiffusion.pt'] },
+    'FeiArt_Handpainted_CG_Diffusion': { 'downloaded': False, 'sha': '85f95f0618f288476ffcec9f48160542ba626f655b3df963543388dcd059f86a', 'uri_list': ['https://huggingface.co/Feiart/FeiArt-Handpainted-CG-Diffusion/resolve/main/FeiArt-Handpainted-CG-Diffusion.pt'] },
+    'Textile_Diffusion': { 'downloaded': False, 'sha': '82aa9ac10c67a806929b5399f04b933ffaa98f1a2bb0c18103d6ccd8f5bd2dd4', 'uri_list': ['https://huggingface.co/KaliYuga/textilediffusion/resolve/main/textilediffusion.pt'] },
+    'Isometric_Diffusion_Revrart512px': { 'downloaded': False, 'sha': '649bb7d10ea5170b71bc24adfb17f0305955fde38d2bb1bc5428c6d5baf9811c', 'uri_list': ['https://huggingface.co/Revrart/IsometricDiffusionRevrart512px/resolve/main/IsometricDiffusionRevrart512px.pt'] },
+    'Laproper_Diffusion_Deepspace_256': { 'downloaded': False, 'sha': '7c0d742d714ee512edda3299b440f22c72e95fda3f32e24c4ba1f03e0c4b0524', 'uri_list': ['https://huggingface.co/laproper/diffusion-deepspace-256/resolve/main/ema_0.9999_102000.pt']},
+    'Schnippi_Diffusion_512x512_V2': { 'downloaded': False, 'sha': '9c111ab89e214862b76e1fa6a1b3f1d329b1a88281885943d2cdbe357ad57648', 'uri_list': ['https://huggingface.co/shnippi/shnippi_diffusion/resolve/main/512x512_shnippi_V2.pt']},
+
     'secondary': { 'downloaded': False, 'sha': '983e3de6f95c88c81b2ca7ebb2c217933be1973b1ff058776b970f901584613a', 'uri_list': ['https://huggingface.co/spaces/huggi/secondary_model_imagenet_2.pth/resolve/main/secondary_model_imagenet_2.pth', 'https://the-eye.eu/public/AI/models/v-diffusion/secondary_model_imagenet_2.pth', 'https://ipfs.pollinations.ai/ipfs/bafybeibaawhhk7fhyhvmm7x24zwwkeuocuizbqbcg5nqx64jq42j75rdiy/secondary_model_imagenet_2.pth'] },
 }
-
 class ModelSettings:
     def __init__(self, model_name, model_path):
         self.model_path = model_path
