@@ -9,7 +9,19 @@ This repo holds a modularized version of [Disco Diffusion](https://github.com/al
 1. Clone this repository into your `ComfyUI/custom_nodes` folder with `git clone --recursive https://github.com/space-nuko/ComfyUI-Disco-Diffusion`.
 2. Activate the virtualenv you use with ComfyUI.
 3. Navigate to the cloned folder and run `pip install -r requirements.txt`.
-4. Start ComfyUI.
+
+**NOTE:** You also have to make sure that inference mode is turned off within ComfyUI or you'll get errors.
+
+In `ComfyUI/execution.py`, change:
+
+``` python
+with torch.inference_mode():
+```
+
+to:
+``` python
+with torch.inference_mode(False):
+```
 
 ## Nodes included
 
@@ -22,7 +34,7 @@ This repo holds a modularized version of [Disco Diffusion](https://github.com/al
 
 The simplest usage is to connect the Guided Diffusion Loader and OpenAI CLIP Loader nodes into a Disco Diffusion node, then hook the Disco Diffusion node up to a Save Image node.
 
-Alternatively, you can substitude the OpenAI CLIP Loader for ComfyUI's CLIP Loader and CLIP Vision Loader, however in this case you need to copy the CLIP model you use into both the `clip` and `clip_vision` subfolders under your `ComfyUI/models` folder, because ComfyUI can't load both at once from the same model file.
+Alternatively, you can substitute the OpenAI CLIP Loader for ComfyUI's CLIP Loader and CLIP Vision Loader, however in this case you need to copy the CLIP model you use into both the `clip` and `clip_vision` subfolders under your `ComfyUI/models` folder, because ComfyUI can't load both at once from the same model file.
 
 The Disco Diffusion node uses a special syntax for writing prompts, which is shown below.
 

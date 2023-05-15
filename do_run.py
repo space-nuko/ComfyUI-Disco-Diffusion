@@ -23,6 +23,7 @@ from numpy import asarray
 from . import py3d_tools as p3dT
 from . import disco_xform_utils as dxf
 from .CLIP import clip
+import open_clip
 
 import comfy.model_management
 import comfy.utils
@@ -118,8 +119,11 @@ def get_input_resolution(clip_model):
         if isinstance(clip_model, ClipVisionModel):
             # ComfyUI (Transformers)
             return clip_model.model.config.image_size
+        elif isinstance(clip_model, open_clip.CLIP):
+            # OpenClip
+            return clip_model.visual.image_size[0]
         else:
-            # OpenAI/OpenClip
+            # OpenAI
             return clip_model.visual.input_resolution
     except Exception as err:
         print("Couldn't find clip vision image size! " + str(err) + " " + str(type(clip_model)))
@@ -339,7 +343,6 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
         clip_vision.model.to(device) # Gets loaded to CPU by comfy, move to GPU
 
     print(f'Frame {frame_num} Prompt: {frame_prompt}')
-
 
     clip_models = [clip_model]
 
