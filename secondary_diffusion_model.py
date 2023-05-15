@@ -25,10 +25,6 @@ def append_dims(x, n):
     return x[(Ellipsis, *(None,) * (n - x.ndim))]
 
 
-def alpha_sigma_to_t(alpha, sigma):
-    return torch.atan2(sigma, alpha) * 2 / math.pi
-
-
 def expand_to_planes(x, shape):
     return append_dims(x, len(shape)).repeat([1, 1, *shape[2:]])
 

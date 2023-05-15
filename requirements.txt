@@ -8,3 +8,4 @@ datetime
 pandas
 opencv-python
 regex
+https://github.com/assafshocher/ResizeRight.git

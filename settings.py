@@ -111,7 +111,7 @@ class DiscoDiffusionSettings:
         # @markdown All rotations are provided in degrees.
 
         self.key_frames = True  # @param {type:"boolean"}
-        self.max_frames = 10000  # @param {type:"number"}
+        self.max_frames = 100  # @param {type:"number"}
 
         # Do not change, currently will not look good. param ['Linear','Quadratic','Cubic']{type:"string"}
         self.interp_spline = 'Linear'

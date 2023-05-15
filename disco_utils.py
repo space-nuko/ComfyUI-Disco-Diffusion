@@ -175,6 +175,10 @@ def range_loss(input):
     return (input - input.clamp(-1, 1)).pow(2).mean([1, 2, 3])
 
 
+def alpha_sigma_to_t(alpha, sigma):
+    return torch.atan2(sigma, alpha) * 2 / math.pi
+
+
 normalize = T.Normalize(mean=[0.48145466, 0.4578275, 0.40821073], std=[0.26862954, 0.26130258, 0.27577711])
 
 

@@ -43,7 +43,7 @@ from .do_run import do_run
 # !! }}
 #@title Do the Run!
 #@markdown `n_batches` ignored with animation modes.
-def diffuse(clip, args: DiscoDiffusionSettings, batchNum):
+def diffuse(clip, clip_vision, args: DiscoDiffusionSettings, batchNum):
     args.display_rate = 20 #@param{type: 'number'}
     args.n_batches = 50 #@param{type: 'number'}
 
@@ -133,6 +133,10 @@ def diffuse(clip, args: DiscoDiffusionSettings, batchNum):
     args.seed = seed
     args.prompts_series = disco_utils.split_prompts(args.text_prompts, args.max_frames) if args.text_prompts else None,
     args.image_prompts_series = disco_utils.split_prompts(args.image_prompts, args.max_frames) if args.image_prompts else None,
+    args.cut_overview = eval(args.cut_overview)
+    args.cut_innercut = eval(args.cut_innercut)
+    args.cut_ic_pow = eval(args.cut_ic_pow)
+    args.cut_icgray_p = eval(args.cut_icgray_p)
 
     # args = {
     #     'batchNum': batchNum,
@@ -267,7 +271,7 @@ def diffuse(clip, args: DiscoDiffusionSettings, batchNum):
     gc.collect()
     torch.cuda.empty_cache()
     try:
-        do_run(diffusion, model, clip, args, batchNum)
+        do_run(diffusion, model, clip, clip_vision, args, batchNum)
     except KeyboardInterrupt:
         pass
     finally:

@@ -22,8 +22,10 @@ import random
 from numpy import asarray
 from . import py3d_tools as p3dT
 from . import disco_xform_utils as dxf
+from .CLIP import clip
 
 import comfy.model_management
+import comfy.utils
 
 from . import disco_utils
 from .make_cutouts import MakeCutouts, MakeCutoutsDango
@@ -90,13 +92,16 @@ def id(x):
     return x
 
 
-def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
+def do_run(diffusion, model, clip_, clip_vision, args: DiscoDiffusionSettings, batchNum):
     seed = args.seed
     print(range(args.start_frame, args.max_frames))
+
+    pbar = comfy.utils.ProgressBar(diffusion.num_timesteps - args.skip_steps)
 
     if (args.animation_mode == "3D") and (args.midas_weight > 0.0):
         midas_model, midas_transform, midas_net_w, midas_net_h, midas_resize_mode, midas_normalization = init_midas_depth_model(
             args.midas_depth_model)
+
     for frame_num in range(args.start_frame, args.max_frames):
         if stop_on_next_loop:
             break
@@ -104,10 +109,10 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
         # display.clear_output(wait=True)
 
         # Print Frame progress if animation mode is on
-        if args.animation_mode != "None":
-            batchBar = tqdm(range(args.max_frames), desc="Frames")
-            batchBar.n = frame_num
-            batchBar.refresh()
+        # if args.animation_mode != "None":
+        #     batchBar = tqdm(range(args.max_frames), desc="Frames")
+        #     batchBar.n = frame_num
+        #     batchBar.refresh()
 
         # Inits if not video frames
         if args.animation_mode != "Video Input":
@@ -278,7 +283,7 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
 
         print(f'Frame {frame_num} Prompt: {frame_prompt}')
 
-        clip_models = [clip]  # TODO!!!!!!!!!!!!!!!!!!!!!
+        clip_models = [clip_]  # TODO!!!!!!!!!!!!!!!!!!!!!
 
         model_stats = []
         for clip_model in clip_models:
@@ -286,10 +291,13 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
             model_stat = {"clip_model": None, "target_embeds": [],
                           "make_cutouts": None, "weights": []}
             model_stat["clip_model"] = clip_model
+            model_stat["clip_vision_model"] = clip_vision
 
             for prompt in frame_prompt:
+                prompt = ", ".join(prompt)
                 txt, weight = disco_utils.parse_prompt(prompt)
-                txt = clip_model.encode(prompt).float()
+                # txt = clip_model.encode(prompt).float()
+                txt = clip_model.encode_text(clip.tokenize(prompt).to(device)).float()
 
                 if args.fuzzy_prompt:
                     for i in range(25):
@@ -310,7 +318,7 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
                         img, min(args.side_x, args.side_y, *img.size), T.InterpolationMode.LANCZOS)
                     batch = model_stat["make_cutouts"](TF.to_tensor(
                         img).to(device).unsqueeze(0).mul(2).sub(1))
-                    embed = clip_model.encode_image(
+                    embed = clip_vision.encode_image(
                         disco_utils.normalize(batch)).float()
                     if args.fuzzy_prompt:
                         for i in range(25):
@@ -337,7 +345,7 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
             init = TF.to_tensor(init).to(device).unsqueeze(0).mul(2).sub(1)
 
         if args.perlin_init:
-            init = disco_utils.regen_perlin()
+            init = disco_utils.regen_perlin(args.perlin_mode, args.batch_size)
 
         cur_t = None
 
@@ -385,7 +393,7 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
                                                 )
                         clip_in = disco_utils.normalize(
                             cuts(x_in.add(1).div(2)))
-                        image_embeds = model_stat["clip_model"].encode_image(
+                        image_embeds = model_stat["clip_vision_model"].encode_image(
                             clip_in).float()
                         dists = disco_utils.spherical_dist_loss(image_embeds.unsqueeze(
                             1), model_stat["target_embeds"].unsqueeze(0))
@@ -421,19 +429,19 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
                 return grad * magnitude.clamp(max=args.clamp_max) / magnitude
             return grad
 
-        if args.diffusion_sampling_mode == 'ddim':
+        if args.MS.diffusion_sampling_mode == 'ddim':
             sample_fn = diffusion.ddim_sample_loop_progressive
         else:
             sample_fn = diffusion.plms_sample_loop_progressive
 
         # image_display = Output()
         for i in range(args.n_batches):
-            if args.animation_mode == 'None':
+            # if args.animation_mode == 'None':
                 # display.clear_output(wait=True)
-                batchBar = tqdm(range(args.n_batches), desc="Batches")
-                batchBar.n = i
-                batchBar.refresh()
-            print('')
+                # batchBar = tqdm(range(args.n_batches), desc="Batches")
+                # batchBar.n = i
+                # batchBar.refresh()
+            print(f"+++ Batch {i} +++")
             # display.display(image_display)
             gc.collect()
             torch.cuda.empty_cache()
@@ -442,7 +450,7 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
 
             if args.perlin_init:
                 init = disco_utils.regen_perlin(
-                    args.perlin_mode, args.batch_size)
+                    args.perlin_mode, args.batch_size, True)
 
             symmetry_transformation_fn = id
             if args.use_horizontal_symmetry:
@@ -450,7 +458,7 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
             if args.use_vertical_symmetry:
                 symmetry_transformation_fn = vert_symmetry
 
-            if args.diffusion_sampling_mode == 'ddim':
+            if args.MS.diffusion_sampling_mode == 'ddim':
                 samples = sample_fn(
                     model,
                     (args.batch_size, 3, args.side_y, args.side_x),
@@ -482,6 +490,7 @@ def do_run(diffusion, model, clip, args: DiscoDiffusionSettings, batchNum):
             # with run_display:
             # display.clear_output(wait=True)
             for j, sample in enumerate(samples):
+                pbar.update_absolute(j, len(samples))
                 cur_t -= 1
                 intermediateStep = False
                 if args.steps_per_checkpoint is not None:
