@@ -1,0 +1,18 @@
+[submodule "MiDaS"]
+    path = MiDaS
+    url = https://github.com/space-nuko/MiDaS
+[submodule "RAFT"]
+    path = RAFT
+    url = https://github.com/space-nuko/RAFT
+[submodule "guided-diffusion"]
+    path = guided-diffusion
+    url = https://github.com/space-nuko/guided-diffusion
+[submodule "ResizeRight"]
+    path = ResizeRight
+    url = https://github.com/assafshocher/ResizeRight
+[submodule "CLIP"]
+    path = CLIP
+    url = https://github.com/openai/CLIP
+[submodule "open_clip"]
+    path = open_clip
+    url = https://github.com/mlfoundations/open_clip
