@@ -22,6 +22,8 @@ This repo holds a modularized version of [Disco Diffusion](https://github.com/al
 
 The simplest usage is to connect the Guided Diffusion Loader and OpenAI CLIP Loader nodes into a Disco Diffusion node, then hook the Disco Diffusion node up to a Save Image node.
 
+Alternatively, you can substitude the OpenAI CLIP Loader for ComfyUI's CLIP Loader and CLIP Vision Loader, however in this case you need to copy the CLIP model you use into both the `clip` and `clip_vision` subfolders under your `ComfyUI/models` folder, because ComfyUI can't load both at once from the same model file.
+
 The Disco Diffusion node uses a special syntax for writing prompts, which is shown below.
 
 ```
