@@ -33,7 +33,7 @@ class OpenAICLIPLoader:
     @classmethod
     def INPUT_TYPES(s):
         open_clip_models = ["_".join(m) for m in OPEN_CLIP_MODELS]
-        return {"required": {"model_name": (OPENAI_CLIP_MODELS + OPEN_CLIP_MODELS, { "default": "ViT-B/32" }) }}
+        return {"required": {"model_name": (OPENAI_CLIP_MODELS + open_clip_models, { "default": "ViT-B/32" }) }}
 
     # These are technically different model formats so don't use them with vanilla nodes!
     RETURN_TYPES = ("CLIP", "CLIP_VISION")
@@ -50,8 +50,8 @@ class OpenAICLIPLoader:
         if model_name in OPENAI_CLIP_MODELS:
             clip_model = openai_clip.load(model_name, jit=False)[0]
         else:
-            spl = model_name.split("_")
-            clip_model = open_clip.create_model(spl[0], pretrained=spl[1])
+            name, pretrained = model_name.split("_", 1)
+            clip_model = open_clip.create_model(name, pretrained=pretrained)
 
         clip_model.eval().requires_grad_(False).to(device)
 
