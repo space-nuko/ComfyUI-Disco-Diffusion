@@ -123,15 +123,15 @@ class DiscoDiffusionExtraSettings:
 
 DEFAULT_PROMPT = """\
 ; How to prompt:
-; Each line is prefixed with the starting frame number of the prompt.
-; More than one line with the same frame number concatenates the two prompts together.
+; Each line is prefixed with the starting step number of the prompt.
+; More than one line with the same step number concatenates the two prompts together.
 ; Each individual prompt can be no more than 77 CLIP tokens long.
 ; Weights are parsed from the end of each prompt with "25:a fluffy fox:5" syntax
 ; Comments are written with the ';' character. Blank lines are ignored.
 
 0:A beautiful painting of a singular lighthouse, shining its light across a tumultuous sea of blood by greg rutkowski and thomas kinkade. Trending on artstation.
 0:yellow color scheme
-;100:This set of prompts start at frame 100.
+;100:This set of prompts starts at step 100.
 ;100:This prompt has weight five:5
 """.strip()
 

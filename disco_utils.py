@@ -196,6 +196,7 @@ def pyget(url, path=None, filename=None, progress=True):
         pbar = None
         if progress:
             pbar = comfy.utils.ProgressBar(total_size_in_bytes)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'wb') as file:
             for chunk in response.iter_content(1024):
                 if progress:
