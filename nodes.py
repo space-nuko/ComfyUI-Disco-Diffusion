@@ -25,29 +25,15 @@ from .CLIP import clip as openai_clip
 import open_clip
 
 
-OPENAI_CLIP_MODELS = ['ViT-B/32', 'ViT-B/16', 'ViT-L/14', 'ViT-L/14@336px', 'RN50', 'RN50x4', 'RN50x16', 'RN50x64', 'RN101']
-OPEN_CLIP_MODELS = [
-    ['ViT-B-32', 'laion2b_e16'],
-    ['ViT-B-32', 'laion400m_e31'],
-    ['ViT-B-32', 'laion400m_e32'],
-    ['ViT-B-32-quickgelu', 'laion400m_e31'],
-    ['ViT-B-32-quickgelu', 'laion400m_e32'],
-    ['ViT-B-16', 'laion400m_e31'],
-    ['ViT-B-16', 'laion400m_e32'],
-    ['RN50', 'yfcc15m'],
-    ['RN50', 'cc12m'],
-    ['RN50-quickgelu', 'yfcc15m'],
-    ['RN50-quickgelu', 'cc12m'],
-    ['RN101', 'yfcc15m'],
-    ['RN101-quickgelu', 'yfcc15m']
-]
+OPENAI_CLIP_MODELS = openai_clip.available_models()
+OPEN_CLIP_MODELS = open_clip.list_pretrained()
 
 
 class OpenAICLIPLoader:
     @classmethod
     def INPUT_TYPES(s):
         open_clip_models = ["_".join(m) for m in OPEN_CLIP_MODELS]
-        return {"required": {"model_name": (OPENAI_CLIP_MODELS + open_clip_models, { "default": "ViT-B/32" }) }}
+        return {"required": {"model_name": (OPENAI_CLIP_MODELS + OPEN_CLIP_MODELS, { "default": "ViT-B/32" }) }}
 
     # These are technically different model formats so don't use them with vanilla nodes!
     RETURN_TYPES = ("CLIP", "CLIP_VISION")
