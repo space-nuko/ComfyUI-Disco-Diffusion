@@ -124,7 +124,7 @@ DEFAULT_PROMPT = """\
 ; How to prompt:
 ; Each line is prefixed with the starting frame number of the prompt.
 ; More than one line with the same frame number concatenates the two prompts together.
-; Each individual prompt can be no more than 77 characters long.
+; Each individual prompt can be no more than 77 CLIP tokens long.
 ; Weights are parsed from the end of each prompt with "25:a fluffy fox:5" syntax
 ; Comments are written with the ';' character. Blank lines are ignored.
 
