@@ -108,8 +108,8 @@ DEFAULT_PROMPT = """\
 
 0:A beautiful painting of a singular lighthouse, shining its light across a tumultuous sea of blood by greg rutkowski and thomas kinkade. Trending on artstation.
 0:yellow color scheme
-100:This set of prompts start at frame 100.
-100:This prompt has weight five:5
+#100:This set of prompts start at frame 100.
+#100:This prompt has weight five:5
 """.strip()
 
 
@@ -120,10 +120,28 @@ class DiscoDiffusion:
                              "guided_diffusion": ("GUIDED_DIFFUSION_MODEL",),
                              "clip": ("CLIP",),
                              "clip_vision": ("CLIP_VISION",),
+                             # Sane defaults:
+                             # 1280x768 for 512x512 models
+                             # 512x448 for 256x256 models
+                             "width": ("INT", {"default": 1280, "min": 64, "max": 2048, "step": 64}),
+                             "height": ("INT", {"default": 768, "min": 64, "max": 2048, "step": 64}),
+                             "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                              "steps": ("INT", {"default": 250, "min": 1, "max": 10000}),
+                             "skip_steps": ("INT", {"default": 10, "min": 1, "max": 10000}),
                              "n_batches": ("INT", {"default": 1, "min": 1, "max": 16}),
                              # "max_frames": ("INT", {"default": 1, "min": 1, "max": 1000}),
-                             "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                             "sampling_mode": (["plms", "ddim", "stsp", "ltsp"], {"default": "ddim"}),
+                             "clip_guidance_scale": ("INT", { "default": 5000, "min": 1, "max": 10000000 }),
+                             "tv_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
+                             "range_scale": ("INT", { "default": 150, "min": 0, "max": 100000 }),
+                             "sat_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
+                             "eta": ("FLOAT", { "default": 0.8, "min": 0, "max": 100 }),
+                             "cutn": ("INT", { "default": 16, "min": 1, "max": 32 }),
+                             "cutn_batches": ("INT", { "default": 2, "min": 1, "max": 16 }),
+                             "cut_overview": ("STRING", { "default": "[12]*400+[4]*600" }),
+                             "cut_innercut": ("STRING", { "default": "[4]*400+[12]*600" }),
+                             "cut_ic_pow": ("STRING", { "default": "[1]*1000" }),
+                             "cut_icgray_p": ("STRING", { "default": "[0.2]*400+[0]*600" }),
                              }}
     RETURN_TYPES = ("IMAGE",)
     OUTPUT_IS_LIST = (True,)
@@ -192,13 +210,30 @@ class DiscoDiffusion:
 
         return model, diffusion
 
-    def generate(self, text, guided_diffusion, clip, clip_vision, steps, n_batches, seed):
+    def generate(self, text, guided_diffusion, clip, clip_vision, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
+                 clip_guidance_scale, tv_scale, range_scale, sat_scale, eta,
+                 cutn, cutn_batches, cut_overview, cut_innercut, cut_ic_pow, cut_icgray_p):
         settings = DiscoDiffusionSettings()
         settings.seed = seed
         settings.steps = steps
+        settings.skip_steps = skip_steps
         settings.n_batches = n_batches
         settings.max_frames = 1
         settings.text_prompts = self.parse_prompts(text)
+        settings.width_height_for_256x256_models = [width, height]
+        settings.width_height_for_512x512_models = [width, height]
+        settings.clip_guidance_scale = clip_guidance_scale
+        settings.tv_scale = tv_scale
+        settings.range_scale = range_scale
+        settings.sat_scale = sat_scale
+        settings.eta = eta
+        settings.cutn = cutn
+        settings.cutn_batches = cutn_batches
+        settings.cut_overview = cut_overview
+        settings.cut_innercut = cut_innercut
+        settings.cut_ic_pow = cut_ic_pow
+        settings.cut_icgray_p = cut_icgray_p
+        guided_diffusion.diffusion_sampling_mode = sampling_mode
 
         print("[Disco Diffusion] Parsed Prompts:")
         pp(settings.text_prompts)

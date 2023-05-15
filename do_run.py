@@ -263,7 +263,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                         if args.vr_mode:
                             generate_eye_views(
                                 TRANSLATION_SCALE, args.batchFolder, filename, frame_num, midas_model, midas_transform)
-                        return
+                        return []
                     else:
                         # if not a skip frame, will run diffusion and need to blend.
                         oldWarpedImg = cv2.imread('prevFrameScaled.png')
@@ -345,7 +345,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
 
     model_stats = []
     for clip_model in clip_models:
-        cutn = 16
+        cutn = args.cutn
         model_stat = {"clip_model": None, "target_embeds": [],
                         "make_cutouts": None, "weights": []}
         model_stat["clip_model"] = clip_model
@@ -482,6 +482,10 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
 
     if args.MS.diffusion_sampling_mode == 'ddim':
         sample_fn = diffusion.ddim_sample_loop_progressive
+    elif args.MS.diffusion_sampling_mode == 'stsp':
+        sample_fn = diffusion.stsp_sample_loop_progressive
+    elif args.MS.diffusion_sampling_mode == 'ltsp':
+        sample_fn = diffusion.ltsp_sample_loop_progressive
     else:
         sample_fn = diffusion.plms_sample_loop_progressive
 
@@ -570,10 +574,18 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                                 filename = f'{args.batch_name}({batchNum})_{i:04}-{j:03}.png'
                     save_image(image, j, cur_t, filename, frame_num, midas_model, midas_transform, args)
 
-                    results.append(image)
+                    if cur_t == -1:
+                        # We get back a tensor of size [C, H, W].
+                        # Comfy's IMAGE output expects a stacked [B, H, W, C].
+                        # So... Let's Transposing!
+                        image = image.permute(1, 2, 0).add(1).div(2).clamp(0, 1)
+                        # image = image.add(1).div(2).clamp(0, 1)
+                        # [[H, W, C]] -> [B, H, W, C]
+                        results.append(torch.stack([image]))
 
         # plt.plot(np.array(loss_values), 'r')
-    return torch.stack(results)
+
+    return results
 
 def save_image(image, j, cur_t, filename, frame_num, midas_model, midas_transform, args):
     image = TF.to_pil_image(

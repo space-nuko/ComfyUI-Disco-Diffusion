@@ -58,6 +58,7 @@ class DiscoDiffusionSettings:
         self.tv_scale = 0  # @param{type: 'number'}
         self.range_scale = 150  # @param{type: 'number'}
         self.sat_scale = 0  # @param{type: 'number'}
+        self.cutn = 16
         self.cutn_batches = 4  # @param{type: 'number'}
         self.skip_augs = False  # @param{type: 'boolean'}
 
