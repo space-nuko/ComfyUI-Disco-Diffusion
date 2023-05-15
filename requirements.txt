@@ -1,6 +1,5 @@
 lpips
 datetime
-guided-diffusion@git+https://github.com/kostarion/guided-diffusion
 imageio
 imageio-ffmpeg==0.4.4
 lpips
@@ -8,4 +7,3 @@ datetime
 pandas
 opencv-python
 regex
-https://github.com/assafshocher/ResizeRight.git
