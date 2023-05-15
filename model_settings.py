@@ -43,11 +43,10 @@ diff_model_map = {
 }
 
 class ModelSettings:
-    def __init__(self):
-        self.root_path = os.getcwd()
-        self.model_path = f'{self.root_path}/models'
+    def __init__(self, model_name, model_path):
+        self.model_path = model_path
         #@markdown ####**Models Settings (note: For pixel art, the best is pixelartdiffusion_expanded):**
-        self.diffusion_model = "512x512_diffusion_uncond_finetune_008100" #@param ["256x256_diffusion_uncond", "512x512_diffusion_uncond_finetune_008100", "portrait_generator_v001", "pixelartdiffusion_expanded", "pixel_art_diffusion_hard_256", "pixel_art_diffusion_soft_256", "pixelartdiffusion4k", "watercolordiffusion_2", "watercolordiffusion", "PulpSciFiDiffusion", "custom"]
+        self.diffusion_model = model_name #@param ["256x256_diffusion_uncond", "512x512_diffusion_uncond_finetune_008100", "portrait_generator_v001", "pixelartdiffusion_expanded", "pixel_art_diffusion_hard_256", "pixel_art_diffusion_soft_256", "pixelartdiffusion4k", "watercolordiffusion_2", "watercolordiffusion", "PulpSciFiDiffusion", "custom"]
 
         self.use_secondary_model = True #@param {type: 'boolean'}
         self.diffusion_sampling_mode = 'ddim' #@param ['plms','ddim']
@@ -123,7 +122,7 @@ class ModelSettings:
                         print(f'{diffusion_model_name} model download from {model_uri} failed. Will try any fallback uri.')
                 print(f'{diffusion_model_name} download failed.')
 
-    def setup(self, S):
+    def setup(self, useCPU):
         # Download the diffusion model(s)
         self.download_model(self.diffusion_model)
         if self.use_secondary_model:
@@ -145,7 +144,7 @@ class ModelSettings:
                 'num_res_blocks': 2,
                 'resblock_updown': True,
                 'use_checkpoint': self.use_checkpoint,
-                'use_fp16': not S.useCPU,
+                'use_fp16': not useCPU,
                 'use_scale_shift_norm': True,
             })
         elif self.diffusion_model == '256x256_diffusion_uncond':
@@ -163,7 +162,7 @@ class ModelSettings:
                 'num_res_blocks': 2,
                 'resblock_updown': True,
                 'use_checkpoint': self.use_checkpoint,
-                'use_fp16': not S.useCPU,
+                'use_fp16': not useCPU,
                 'use_scale_shift_norm': True,
             })
         elif self.diffusion_model == 'portrait_generator_v001':
@@ -235,5 +234,3 @@ class ModelSettings:
         #if self.RN101_quickgelu_yfcc15m: clip_models.append(open_clip.create_model('RN101-quickgelu', pretrained='yfcc15m').eval().requires_grad_(False).to(device))
 
         self.lpips_model = lpips.LPIPS(net='vgg').to(device)
-
-        S.MS = self

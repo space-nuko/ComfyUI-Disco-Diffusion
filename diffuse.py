@@ -43,29 +43,17 @@ from .do_run import do_run
 # !! }}
 #@title Do the Run!
 #@markdown `n_batches` ignored with animation modes.
-def diffuse(clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
+def diffuse(model, diffusion, clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
     args.display_rate = 20 #@param{type: 'number'}
-    args.n_batches = 50 #@param{type: 'number'}
 
     if args.animation_mode == 'Video Input':
         args.steps = args.video_init_steps
-
-    #Update Model Settings
-    timestep_respacing = f'ddim{args.steps}'
-    diffusion_steps = (1000//args.steps)*args.steps if args.steps < 1000 else args.steps
-    args.MS.model_config.update({
-        'timestep_respacing': timestep_respacing,
-        'diffusion_steps': diffusion_steps,
-    })
 
     def move_files(start_num, end_num, old_folder, new_folder):
         for i in range(start_num, end_num):
             old_file = old_folder + f'/{args.batch_name}({batchNum})_{i:04}.png'
             new_file = new_folder + f'/{args.batch_name}({batchNum})_{i:04}.png'
             os.rename(old_file, new_file)
-
-    #@markdown ---
-
 
     args.resume_run = False #@param{type: 'boolean'}
     run_to_resume = 'latest' #@param{type: 'string'}
@@ -126,7 +114,7 @@ def diffuse(clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
         seed = int(args.set_seed)
 
     args.n_batches = args.n_batches if args.animation_mode == 'None' else 1
-    args.max_frames = args.max_frames if args.animation_mode == 'None' else 1
+    args.max_frames = args.max_frames if args.animation_mode != 'None' else 1
     args.start_frame = start_frame
     args.seed = seed
     args.prompts_series = disco_utils.split_prompts(args.text_prompts, args.max_frames) if args.text_prompts else None,
@@ -251,28 +239,17 @@ def diffuse(clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
 
     # args = SimpleNamespace(**args)
 
-    device = comfy.model_management.get_torch_device()
-
-    print('Prepping model...')
-    model, diffusion = create_model_and_diffusion(**args.MS.model_config)
-    if args.MS.diffusion_model == 'custom':
-        model.load_state_dict(torch.load(args.MS.custom_path, map_location='cpu'))
-    else:
-        model.load_state_dict(torch.load(f'{args.MS.model_path}/{args.MS.get_model_filename(args.MS.diffusion_model)}', map_location='cpu'))
-    model.requires_grad_(False).eval().to(device)
-    for name, param in model.named_parameters():
-        if 'qkv' in name or 'norm' in name or 'proj' in name:
-            param.requires_grad_()
-    if args.MS.model_config['use_fp16']:
-        model.convert_to_fp16()
+    results = []
 
     gc.collect()
     torch.cuda.empty_cache()
     try:
-        do_run(diffusion, model, clip_model, clip_vision, args, batchNum)
+        results = do_run(diffusion, model, clip_model, clip_vision, args, batchNum)
     except KeyboardInterrupt:
         pass
     finally:
         print('Seed used:', seed)
         gc.collect()
         torch.cuda.empty_cache()
+
+    return results

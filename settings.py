@@ -49,6 +49,7 @@ class DiscoDiffusionSettings:
         # @markdown ####**Basic Settings:**
         self.batch_name = 'TimeToDisco'  # @param{type: 'string'}
         self.batch_size = 1
+        self.n_batches = 1
         # @param [25,50,100,150,250,500,1000]{type: 'raw', allow-input: true}
         self.steps = 250
         self.width_height_for_512x512_models = [
@@ -112,7 +113,7 @@ class DiscoDiffusionSettings:
         # @markdown All rotations are provided in degrees.
 
         self.key_frames = True  # @param {type:"boolean"}
-        self.max_frames = 100  # @param {type:"number"}
+        self.max_frames = 10  # @param {type:"number"}
 
         # Do not change, currently will not look good. param ['Linear','Quadratic','Cubic']{type:"string"}
         self.interp_spline = 'Linear'
@@ -216,6 +217,7 @@ class DiscoDiffusionSettings:
 
         self.perlin_init = False  # @param{type: 'boolean'}
         self.perlin_mode = 'mixed'  # @param ['mixed', 'color', 'gray']
+        self.seed = 0
         self.set_seed = 'random_seed'  # @param{type: 'string'}
         self.eta = 0.8  # @param{type: 'number'}
         self.clamp_grad = True  # @param{type: 'boolean'}
