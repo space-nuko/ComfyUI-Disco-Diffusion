@@ -47,13 +47,14 @@ class OpenAICLIPLoader:
     def load(self, model_name):
         device = comfy.model_management.get_torch_device()
 
-        if model_name in OPENAI_CLIP_MODELS:
-            clip_model = openai_clip.load(model_name, jit=False)[0]
-        else:
-            name, pretrained = model_name.split("_", 1)
-            clip_model = open_clip.create_model(name, pretrained=pretrained)
+        with torch.inference_mode(False):
+            if model_name in OPENAI_CLIP_MODELS:
+                clip_model = openai_clip.load(model_name, jit=False)[0]
+            else:
+                name, pretrained = model_name.split("_", 1)
+                clip_model = open_clip.create_model(name, pretrained=pretrained)
 
-        clip_model.eval().requires_grad_(False).to(device)
+            clip_model.eval().requires_grad_(False).to(device)
 
         return (clip_model, clip_model,)
 

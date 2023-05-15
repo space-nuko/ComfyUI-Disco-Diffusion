@@ -241,15 +241,16 @@ def diffuse(model, diffusion, clip_model, clip_vision, args: DiscoDiffusionSetti
 
     results = []
 
-    gc.collect()
-    torch.cuda.empty_cache()
-    try:
-        results = do_run(diffusion, model, clip_model, clip_vision, args, batchNum)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        print('Seed used:', seed)
+    with torch.inference_mode(False):
         gc.collect()
         torch.cuda.empty_cache()
+        try:
+            results = do_run(diffusion, model, clip_model, clip_vision, args, batchNum)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            print('Seed used:', seed)
+            gc.collect()
+            torch.cuda.empty_cache()
 
     return results

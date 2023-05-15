@@ -9,19 +9,7 @@ This repo holds a modularized version of [Disco Diffusion](https://github.com/al
 1. Clone this repository into your `ComfyUI/custom_nodes` folder with `git clone --recursive https://github.com/space-nuko/ComfyUI-Disco-Diffusion`.
 2. Activate the virtualenv you use with ComfyUI.
 3. Navigate to the cloned folder and run `pip install -r requirements.txt`.
-
-**NOTE:** You also have to make sure that inference mode is turned off within ComfyUI or you'll get errors.
-
-In `ComfyUI/execution.py`, change:
-
-``` python
-with torch.inference_mode():
-```
-
-to:
-``` python
-with torch.inference_mode(False):
-```
+4. Start ComfyUI.
 
 ## Nodes included
 
