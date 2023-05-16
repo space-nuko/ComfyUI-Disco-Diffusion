@@ -53,12 +53,13 @@ class OpenAICLIPLoader:
         # But it's more efficient to run operations on tensors loaded without
         # support for calculating loss, and most people aren't training models,
         # they're just running inference.
-        # And "torch.autograd.grad" is a function mostly used for training models.
-        # But because (this implementation of) guided diffusion requires autograd,
-        # we have to load the tensors with inference mode off ourselves (ComfyUI
-        # enables it by default, for maximum performance).
+        # And "torch.autograd.grad" is a function mostly used for training.
+        # But because (this implementation of) guided diffusion requires
+        # autograd, we have to load the tensors with inference mode off
+        # ourselves (ComfyUI enables it by default for maximum performance).
         # Same with the guided diffusion model, secondary diffusion model and
-        # sampling code, it all must be run with support for autograd (inference mode off).
+        # sampling code, it all must be loaded/run with support for autograd
+        # (inference mode off).
         with torch.inference_mode(False):
             if model_name in OPENAI_CLIP_MODELS:
                 download_root = os.path.join(folder_paths.models_dir, "OpenAI-CLIP")
