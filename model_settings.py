@@ -116,34 +116,49 @@ class ModelSettings:
         model_filename = os.path.basename(urlparse(model_uri).path)
         return model_filename
 
-    def download_model(self, diffusion_model_name, uri_index=0):
-        if diffusion_model_name != 'custom':
-            model_filename = self.get_model_filename(diffusion_model_name)
-            model_local_path = os.path.join(self.model_path, model_filename)
-            if os.path.exists(model_local_path) and self.check_model_SHA:
-                print(f'Checking {diffusion_model_name} File')
-                with open(model_local_path, "rb") as f:
-                    bytes = f.read()
-                    hash = hashlib.sha256(bytes).hexdigest()
-                if hash == diff_model_map[diffusion_model_name]['sha']:
-                    print(f'{diffusion_model_name} SHA matches')
+    def download_model(self, diffusion_model_name):
+        if diffusion_model_name == 'custom':
+            return
+        model_filename = self.get_model_filename(diffusion_model_name)
+        model_local_path = os.path.join(self.model_path, model_filename)
+        print("Downloading Diffusion Model: ", diffusion_model_name)
+        if os.path.exists(model_local_path):
+            if self.check_model_SHA:
+                print(f"Checking {model_filename} SHA256 Hash...")
+                if self.check_sha_hash(diffusion_model_name, model_local_path):
+                    print(f'{diffusion_model_name} SHA256 matches.')
                     diff_model_map[diffusion_model_name]['downloaded'] = True
                 else:
-                    print(f"{diffusion_model_name} SHA doesn't match. Will redownload it.")
-            elif os.path.exists(model_local_path) and not self.check_model_SHA or diff_model_map[diffusion_model_name]['downloaded']:
-                print(f'{diffusion_model_name} already downloaded. If the file is corrupt, enable check_model_SHA.')
-                diff_model_map[diffusion_model_name]['downloaded'] = True
-
-            if not diff_model_map[diffusion_model_name]['downloaded']:
-                for model_uri in diff_model_map[diffusion_model_name]['uri_list']:
-                    print(f'{diffusion_model_name} model downloading...')
-                    disco_utils.pyget(model_uri, self.model_path, progress=True)
-                    if os.path.exists(model_local_path):
-                        diff_model_map[diffusion_model_name]['downloaded'] = True
-                        return
+                    print(f"{diffusion_model_name} SHA doesn't match. Will redownload it...")
+                    os.remove(model_local_path)
+                    return self.download_model(diffusion_model_name)
+            print(f"{model_filename} \033[32malready downloaded.\033[0;0m")
+        else:
+            for model_uri in diff_model_map[diffusion_model_name]['uri_list']:
+                print(f"Downloading {diffusion_model_name} from: {model_uri}")
+                disco_utils.pyget(model_uri, self.model_path)
+                if os.path.exists(model_local_path):
+                    if self.check_model_SHA:
+                        print(f"Checking {model_filename} SHA256 Hash...")
+                        if self.check_sha_hash(diffusion_model_name, model_local_path):
+                            print(f'{diffusion_model_name} SHA256 matches.')
+                            diff_model_map[diffusion_model_name]['downloaded'] = True
+                            print(f"{diffusion_model_name} \033[32mdownloaded successfully.\033[0;0m")
+                            return
+                        else:
+                            print(f"{diffusion_model_name} \033[31mSHA doesn't match!\033[0;0m Attempting to redownload")
+                            os.remove(model_local_path)
+                            return self.download_model(diffusion_model_name)
                     else:
-                        print(f'{diffusion_model_name} model download from {model_uri} failed. Will try any fallback uri.')
-                print(f'{diffusion_model_name} download failed.')
+                        diff_model_map[diffusion_model_name]['downloaded'] = True
+                        print(f"{diffusion_model_name} \033[32mdownloaded successfully.\033[0;0m")
+                        return
+                else:
+                    print(f"\033[31mFailed to download\033[0;0m {diffusion_model_name} from: {model_uri}")
+                    if len(diff_model_map[diffusion_model_name]['uri_list']) > 1:
+                        print("Attempting to download from another source...")
+                    else:
+                        print(f"No additional download resources available for {diffusion_model_name}")
 
     def setup(self, useCPU):
         # Download the diffusion model(s)
