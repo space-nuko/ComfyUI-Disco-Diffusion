@@ -49,10 +49,12 @@ class OpenAICLIPLoader:
 
         with torch.inference_mode(False):
             if model_name in OPENAI_CLIP_MODELS:
-                clip_model = openai_clip.load(model_name, jit=False)[0]
+                download_root = os.path.join(folder_paths.models_dir, "OpenAI-CLIP")
+                clip_model = openai_clip.load(model_name, jit=False, download_root=download_root)[0]
             else:
+                download_root = os.path.join(folder_paths.models_dir, "OpenCLIP")
                 name, pretrained = model_name.split("_", 1)
-                clip_model = open_clip.create_model(name, pretrained=pretrained)
+                clip_model = open_clip.create_model(name, pretrained=pretrained, cache_dir=download_root)
 
             clip_model.eval().requires_grad_(False).to(device)
 
