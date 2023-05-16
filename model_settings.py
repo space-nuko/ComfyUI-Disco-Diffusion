@@ -64,6 +64,9 @@ diff_model_map = {
 
     'secondary': { 'downloaded': False, 'sha': '983e3de6f95c88c81b2ca7ebb2c217933be1973b1ff058776b970f901584613a', 'uri_list': ['https://huggingface.co/spaces/huggi/secondary_model_imagenet_2.pth/resolve/main/secondary_model_imagenet_2.pth', 'https://the-eye.eu/public/AI/models/v-diffusion/secondary_model_imagenet_2.pth', 'https://ipfs.pollinations.ai/ipfs/bafybeibaawhhk7fhyhvmm7x24zwwkeuocuizbqbcg5nqx64jq42j75rdiy/secondary_model_imagenet_2.pth'] },
 }
+
+
+
 class ModelSettings:
     def __init__(self, model_name, model_path):
         self.model_path = model_path
@@ -160,20 +163,14 @@ class ModelSettings:
                     else:
                         print(f"No additional download resources available for {diffusion_model_name}")
 
-    def setup(self, useCPU):
-        # Download the diffusion model(s)
-        self.download_model(self.diffusion_model)
-        if self.use_secondary_model:
-            self.download_model('secondary')
-
-        self.model_config = model_and_diffusion_defaults()
-        if self.diffusion_model == '512x512_diffusion_uncond_finetune_008100':
-            self.model_config.update({
+    def configurate_model(self, diffusion_model, use_checkpoint=False, useCPU=False):
+        model_configurations = {
+            '512x512_diffusion_uncond_finetune_008100': {
                 'attention_resolutions': '32, 16, 8',
                 'class_cond': False,
-                'diffusion_steps': 1000, #No need to edit this, it is taken care of later.
+                'diffusion_steps': 1000,
                 'rescale_timesteps': True,
-                'timestep_respacing': 250, #No need to edit this, it is taken care of later.
+                'timestep_respacing': 250,
                 'image_size': 512,
                 'learn_sigma': True,
                 'noise_schedule': 'linear',
@@ -181,30 +178,28 @@ class ModelSettings:
                 'num_head_channels': 64,
                 'num_res_blocks': 2,
                 'resblock_updown': True,
-                'use_checkpoint': self.use_checkpoint,
+                'use_checkpoint': use_checkpoint,
                 'use_fp16': not useCPU,
                 'use_scale_shift_norm': True,
-            })
-        elif self.diffusion_model == '256x256_diffusion_uncond':
-            self.model_config.update({
+            },
+            '256x256_diffusion_uncond': {
                 'attention_resolutions': '32, 16, 8',
                 'class_cond': False,
-                'diffusion_steps': 1000, #No need to edit this, it is taken care of later.
+                'diffusion_steps': 1000,
                 'rescale_timesteps': True,
-                'timestep_respacing': 250, #No need to edit this, it is taken care of later.
-                'image_size': 256,
+                'timestep_respacing': 250,
+                'image_size': 512,
                 'learn_sigma': True,
                 'noise_schedule': 'linear',
                 'num_channels': 256,
                 'num_head_channels': 64,
                 'num_res_blocks': 2,
                 'resblock_updown': True,
-                'use_checkpoint': self.use_checkpoint,
+                'use_checkpoint': use_checkpoint,
                 'use_fp16': not useCPU,
                 'use_scale_shift_norm': True,
-            })
-        elif self.diffusion_model == 'portrait_generator_v001':
-            self.model_config.update({
+            },
+            '512x512_OpenAI': {
                 'attention_resolutions': '32, 16, 8',
                 'class_cond': False,
                 'diffusion_steps': 1000,
@@ -216,12 +211,26 @@ class ModelSettings:
                 'num_heads': 4,
                 'num_res_blocks': 2,
                 'resblock_updown': True,
-                'use_checkpoint': self.use_checkpoint,
+                'use_checkpoint': use_checkpoint,
                 'use_fp16': True,
                 'use_scale_shift_norm': True,
-            })
-        else:  # E.g. A model finetuned by KaliYuga
-            self.model_config.update({
+            },
+            'Architecture_Diffusion_1-5m': {
+                'attention_resolutions': '32, 16, 8',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'image_size': 512,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 256,
+                'num_head_channels': 64,
+                'num_res_blocks': 2,
+                'resblock_updown': True,
+                'rescale_timesteps': True,
+                'timestep_respacing': '250',
+                'use_scale_shift_norm': True
+            },
+            'Liminal_Diffusion': {
                 'attention_resolutions': '16',
                 'class_cond': False,
                 'diffusion_steps': 1000,
@@ -233,10 +242,205 @@ class ModelSettings:
                 'num_channels': 128,
                 'num_heads': 1,
                 'num_res_blocks': 2,
-                'use_checkpoint': self.use_checkpoint,
+                'use_checkpoint': use_checkpoint,
                 'use_fp16': True,
                 'use_scale_shift_norm': False,
-            })
+            },
+            'Lithography_Diffusion': {
+                'attention_resolutions': '16',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 256,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 128,
+                'num_heads': 1,
+                'num_res_blocks': 2,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': False,
+            },
+            'Medieval_Diffusion': {
+                'attention_resolutions': '16',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 256,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 128,
+                'num_heads': 1,
+                'num_res_blocks': 2,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': False,
+            },
+            'Floral_Diffusion': {
+                'attention_resolutions': '16',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 256,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 128,
+                'num_heads': 1,
+                'num_res_blocks': 2,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': False,
+            },
+            'FeiArt_Handpainted_CG_Diffusion': {
+                'attention_resolutions': '32,16,8',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 512,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 256,
+                'num_head_channels': 64,
+                'num_res_blocks': 2,
+                'resblock_updown': True,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': True,
+            },
+            'Textile_Diffusion': {
+                'attention_resolutions': '16',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 256,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 128,
+                'num_heads': 1,
+                'num_res_blocks': 2,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': False,
+            },
+            'Isometric_Diffusion_Revrart512px': {
+                'attention_resolutions': '32, 16, 8',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 512,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 256,
+                'num_head_channels': 64,
+                'num_res_blocks': 2,
+                'resblock_updown': True,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': True,
+            },
+            'Laproper_Diffusion_Deepspace_256': {
+                'attention_resolutions': '32, 16, 8',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 256,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 128,
+                'num_heads': 4,
+                'num_res_blocks': 2,
+                'resblock_updown': True,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': True,
+            },
+            'Schnippi_Diffusion_512x512_V2': {
+                'attention_resolutions': '32, 16, 8',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 250,
+                'image_size': 512,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 256,
+                'num_head_channels': 64,
+                'num_res_blocks': 2,
+                'resblock_updown': True,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': not useCPU,
+                'use_scale_shift_norm': True,
+            },
+            'Kaliyuga': {
+                'attention_resolutions': '16',
+                'class_cond': False,
+                'diffusion_steps': 1000,
+                'rescale_timesteps': True,
+                'timestep_respacing': 'ddim100',
+                'image_size': 256,
+                'learn_sigma': True,
+                'noise_schedule': 'linear',
+                'num_channels': 128,
+                'num_heads': 1,
+                'num_res_blocks': 2,
+                'use_checkpoint': use_checkpoint,
+                'use_fp16': True,
+                'use_scale_shift_norm': False,
+            },
+        }
+
+        tmp_model_config = model_and_diffusion_defaults()
+
+        if diffusion_model in ['512x512_diffusion_uncond_finetune_008100', 'Schnippi_Diffusion_512x512_V2']:
+            tmp_model_config.update(model_configurations['512x512_diffusion_uncond_finetune_008100'])
+        elif diffusion_model == '256x256_diffusion_uncond':
+            tmp_model_config.update(model_configurations['256x256_diffusion_uncond'])
+        elif diffusion_model in ['concept_art_generator_v000-1_alpha',
+                                'concept_art_generator_v000-2_alpha',
+                                'portrait_generator_v001',
+                                'portrait_generator_v002',
+                                'portrait_generator_v003',
+                                'portrait_generator_v004',
+                                'portrait_generator_v005']:
+            tmp_model_config.update(model_configurations['512x512_OpenAI'])
+        elif diffusion_model == 'Architecture_Diffusion_1-5m':
+            tmp_model_config.update(model_configurations['Architecture_Diffusion_1-5m'])
+        elif diffusion_model in ['Liminal_Diffusion_v1',
+                                'liminal_diffusion_source']:
+            tmp_model_config.update(model_configurations['Liminal_Diffusion'])
+        elif diffusion_model == 'Lithography_Diffusion':
+            tmp_model_config.update(model_configurations['Lithography_Diffusion'])
+        elif diffusion_model == 'Medieval_Diffusion':
+            tmp_model_config.update(model_configurations['Medieval_Diffusion'])
+        elif diffusion_model == 'Floral_Diffusion':
+            tmp_model_config.update(model_configurations['Floral_Diffusion'])
+        elif diffusion_model == 'FeiArt_Handpainted_CG_Diffusion':
+            tmp_model_config.update(model_configurations['FeiArt_Handpainted_CG_Diffusion'])
+        elif diffusion_model == 'Textile_Diffusion':
+            tmp_model_config.update(model_configurations['Textile_Diffusion'])
+        elif diffusion_model == 'Isometric_Diffusion_Revrart512px':
+            tmp_model_config.update(model_configurations['Isometric_Diffusion_Revrart512px'])
+        elif diffusion_model == 'Laproper_Diffusion_Deepspace_256':
+            tmp_model_config.update(model_configurations['Laproper_Diffusion_Deepspace_256'])
+        else:
+            tmp_model_config.update(model_configurations['Kaliyuga'])
+
+        return tmp_model_config
+
+    def setup(self, useCPU):
+        # Download the diffusion model(s)
+        self.download_model(self.diffusion_model)
+        if self.use_secondary_model:
+            self.download_model('secondary')
+
+        self.model_config = self.configurate_model(self.diffusion_model, self.use_checkpoint, useCPU)
 
         self.model_default = self.model_config['image_size']
 
