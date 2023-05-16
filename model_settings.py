@@ -35,7 +35,7 @@ diff_model_map = {
     'concept_art_generator_v000-1_alpha': { 'downloaded': False, 'sha': '0c0394148b4fb56234baee533c36f17202b8f936f28427a957f342aa2f18d040', 'uri_list': ['https://huggingface.co/WAS/concept_art_generator/resolve/main/concept_art_generator_v000-1_alpha.pt'] },
     'concept_art_generator_v000-2_alpha': { 'downloaded': False, 'sha': 'a7aee6b8dd73b6f3d377a8c579b99ed2922fc472ead16238074e08bf7517d075', 'uri_list': ['https://huggingface.co/WAS/concept_art_generator/resolve/main/concept_art_generator_v000-2_alpha.pt'] },
 
-    'portrait_generator_v001': { 'downloaded': False, 'sha': 'b7e8c747af880d4480b6707006f1ace000b058dd0eac5bb13558ba3752d9b5b9', 'uri_list': ['https://huggingface.co/felipe3dartist/portrait_generator_v001/resolve/main/portrait_generator_v001_ema_0.9999_1MM.pt'] },
+    # 'portrait_generator_v001': { 'downloaded': False, 'sha': 'b7e8c747af880d4480b6707006f1ace000b058dd0eac5bb13558ba3752d9b5b9', 'uri_list': ['https://huggingface.co/felipe3dartist/portrait_generator_v001/resolve/main/portrait_generator_v001_ema_0.9999_1MM.pt'] },
     'portrait_generator_v002': { 'downloaded': False, 'sha': '3bc39e28fd9690dafbbee83cc08d089a3640eca8ed4d14280c4a9d342c56fd7f', 'uri_list': ['https://huggingface.co/WAS/portrait-diffusion/resolve/main/ema_0.9999_165000.pt'] },
     'portrait_generator_v003': { 'downloaded': False, 'sha': 'c0e1739731efe682f6429f2f7f905104b602b415ef8bf0b507034cce6050e8e3', 'uri_list': ['https://huggingface.co/WAS/portrait-diffusion/resolve/main/ema_0.9999_430000.pt'] },
     'portrait_generator_v004': { 'downloaded': False, 'sha': '09daed35b70670b8491f27ef172e2a62f08f3a78326aeb88d23cade1fbb878ab', 'uri_list': ['https://huggingface.co/WAS/portrait-diffusion/resolve/main/ema_0.9999_080000.pt'] },
