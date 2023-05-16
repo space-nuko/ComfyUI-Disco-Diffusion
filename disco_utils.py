@@ -199,13 +199,15 @@ def pyget(url, path=None, filename=None, progress=True):
             pbar = comfy.utils.ProgressBar(total_size_in_bytes)
             tqdm_bar = tqdm.tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
         os.makedirs(os.path.dirname(path), exist_ok=True)
+        chunk_size = 10 * 1024 * 1024
         with open(path, 'wb') as file:
-            for chunk in response.iter_content(1024):
-                if progress:
-                    chunk_length = len(chunk)
-                    tqdm_bar.update(chunk_length)
-                    pbar.update(chunk_length)
-                file.write(chunk)
+            for chunk in response.iter_content(chunk_size):
+                if chunk:
+                    if progress:
+                        chunk_length = len(chunk)
+                        tqdm_bar.update(chunk_length)
+                        pbar.update(chunk_length)
+                    file.write(chunk)
         if os.path.exists(path):
             return True
         else:
