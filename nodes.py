@@ -50,8 +50,9 @@ class OpenAICLIPLoader:
         # For my own notes (because I was confused about this earlier):
         # DD requires the use of torch.autograd.grad so it can steer the output
         # image towards CLIP embeddings by calculating loss.
-        # But it's more efficient to load tensors without support for calculating loss
-        # because most people aren't training models, they're just running inference.
+        # But it's more efficient to run operations on tensors loaded without
+        # support for calculating loss, and most people aren't training models,
+        # they're just running inference.
         # And "torch.autograd.grad" is a function mostly used for training models.
         # But because (this implementation of) guided diffusion requires autograd,
         # we have to load the tensors with inference mode off ourselves (ComfyUI
