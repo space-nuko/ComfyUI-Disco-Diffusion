@@ -354,19 +354,19 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
         model_stat["clip_model"] = clip_model
         model_stat["clip_vision_model"] = clip_vision
 
-        for prompt in frame_prompt:
-            prompt = ", ".join(prompt)
-            txt, weight = disco_utils.parse_prompt(prompt)
-            txt = encode_text(clip_model, prompt).to(device)
+        for prompts in frame_prompt:
+            for prompt in prompts:
+                txt, weight = disco_utils.parse_prompt(prompt)
+                txt = encode_text(clip_model, prompt).to(device)
 
-            if args.fuzzy_prompt:
-                for i in range(25):
-                    model_stat["target_embeds"].append(
-                        (txt + torch.randn(txt.shape).cuda() * args.rand_mag).clamp(0, 1))
+                if args.fuzzy_prompt:
+                    for i in range(25):
+                        model_stat["target_embeds"].append(
+                            (txt + torch.randn(txt.shape).cuda() * args.rand_mag).clamp(0, 1))
+                        model_stat["weights"].append(weight)
+                else:
+                    model_stat["target_embeds"].append(txt)
                     model_stat["weights"].append(weight)
-            else:
-                model_stat["target_embeds"].append(txt)
-                model_stat["weights"].append(weight)
 
         if image_prompt:
             input_res = get_input_resolution(clip_vision)
