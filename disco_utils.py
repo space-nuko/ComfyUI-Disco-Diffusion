@@ -20,6 +20,7 @@ from importlib import util as importlibutil
 import numpy as np
 import os
 import requests
+import tqdm
 from urllib.parse import urlparse
 
 import comfy.model_management
@@ -196,11 +197,14 @@ def pyget(url, path=None, filename=None, progress=True):
         pbar = None
         if progress:
             pbar = comfy.utils.ProgressBar(total_size_in_bytes)
+            tqdm_bar = tqdm.tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'wb') as file:
             for chunk in response.iter_content(1024):
                 if progress:
-                    pbar.update(len(chunk))
+                    chunk_length = len(chunk)
+                    tqdm_bar.update(chunk_length)
+                    pbar.update(chunk_length)
                 file.write(chunk)
         if os.path.exists(path):
             return True

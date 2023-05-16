@@ -106,7 +106,7 @@ class ModelSettings:
         self.RN101_quickgelu_yfcc15m = False #@param{type:"boolean"}
 
         #@markdown If you're having issues with model downloads, check this to compare SHA's:
-        self.check_model_SHA = False #@param{type:"boolean"}
+        self.check_model_SHA = True #@param{type:"boolean"}
 
         self.kaliyuga_pixel_art_model_names = ['pixelartdiffusion_expanded', 'pixel_art_diffusion_hard_256', 'pixel_art_diffusion_soft_256', 'pixelartdiffusion4k', 'PulpSciFiDiffusion']
         self.kaliyuga_watercolor_model_names = ['watercolordiffusion', 'watercolordiffusion_2']
@@ -119,12 +119,15 @@ class ModelSettings:
         model_filename = os.path.basename(urlparse(model_uri).path)
         return model_filename
 
+    def check_sha_hash(self, diffusion_model_name, model_local_path):
+        with open(model_local_path, "rb") as f:
+            return hashlib.sha256(f.read()).hexdigest() == diff_model_map[diffusion_model_name]['sha']
+
     def download_model(self, diffusion_model_name):
         if diffusion_model_name == 'custom':
             return
         model_filename = self.get_model_filename(diffusion_model_name)
         model_local_path = os.path.join(self.model_path, model_filename)
-        print("Downloading Diffusion Model: ", diffusion_model_name)
         if os.path.exists(model_local_path):
             if self.check_model_SHA:
                 print(f"Checking {model_filename} SHA256 Hash...")
