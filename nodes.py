@@ -283,9 +283,9 @@ class DiscoDiffusion:
 
         return model, diffusion
 
-    def generate(self, text, guided_diffusion, clip, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
+    def generate(self, text, guided_diffusion, guided_clip, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
                  clip_guidance_scale, tv_scale, range_scale, sat_scale, extra_settings=None):
-        clip_vision = clip # This should be further removed down to the do_run.py
+        clip_vision = guided_clip # This should be further removed down to the do_run.py
         settings = DiscoDiffusionSettings()
         settings.seed = seed
         settings.steps = steps
@@ -319,7 +319,7 @@ class DiscoDiffusion:
         # known until now
         model, diffusion = self.load_model(guided_diffusion, settings.steps)
 
-        images = diffuse(model, diffusion, clip, clip_vision, settings, 0)
+        images = diffuse(model, diffusion, guided_clip, clip_vision, settings, 0)
 
         return (images,)
 
