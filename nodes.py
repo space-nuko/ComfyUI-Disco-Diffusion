@@ -28,6 +28,9 @@ import open_clip
 OPENAI_CLIP_MODELS = openai_clip.available_models()
 OPEN_CLIP_MODELS = open_clip.list_pretrained()
 
+print("OPENAI_CLIP_MODELS:", OPENAI_CLIP_MODELS)
+print("OPEN_CLIP_MODELS:", OPEN_CLIP_MODELS)
+
 
 class OpenAICLIPLoader:
     @classmethod
@@ -35,23 +38,33 @@ class OpenAICLIPLoader:
         input_map = {"required":{}}
         clip_models_base = OPENAI_CLIP_MODELS
         clip_models = OPEN_CLIP_MODELS
+        
+        # Valid models and their pretrains for Disco Diffusion
+        valid_pretrained = ['N/A', 'laion2b_e16', 'laion400m_e31', 'laion400m_e32', 'yfcc15m', 'cc12m']
+        valid_model = ['RN50', 'RN101', 'RN50x4', 'RN50x16', 'RN50x64', 'ViT-B/32', 'ViT-B/16', 'ViT-L/14', 
+                        'ViT-L/14@336px', 'RN50-quickgelu', 'RN101-quickgelu', 'ViT-B-32', 'ViT-B-32-quickgelu',
+                        'ViT-B-16']
 
+        # Create one model  dictionary
         for model in clip_models_base:
             clip_models.append((model, 'N/A')) # N/A so not to be excluded from openai check below
         clip_models = sorted(clip_models)
         
-        for model, author in clip_models:
-            if author in ['openai'] or '/' in model: # Exclude broken openai and duplicates
+        # Create a valid list of CLIP Models in ComfyUI Input format.
+        for model, pretrained in clip_models:
+            if ( pretrained not in valid_pretrained
+                    or model not in valid_model ): # Exclude broken openai and duplicates
                 continue
-            if model in ['ViT-B-32', 'ViT-B-16', 'RN50']: # Default DD CLIP Models
+            if model in ['ViT-B/32', 'ViT-B/16', 'RN50']: # Default DD CLIP Models
                 options = (["True", "False"],)
             else:
                 options = (["False", "True"],)
             input_map['required'].update({model: options})
+            
         return input_map
 
     # These are technically different model formats so don't use them with vanilla nodes!
-    RETURN_TYPES = ("CLIP", "CLIP_VISION")
+    RETURN_TYPES = ("GUIDED_CLIP",)
     FUNCTION = "load"
 
     CATEGORY = "loaders"
@@ -92,9 +105,10 @@ class OpenAICLIPLoader:
                             name, pretrained = model
                             clip_model = open_clip.create_model(name, pretrained=pretrained)
                             clip_model.eval().requires_grad_(False).to(device)
-                    clip_models.append(clip_model)
+                    if clip_model not in clip_models:
+                        clip_models.append(clip_model)
 
-        return (clip_models, clip_models,)
+        return (clip_models, )
 
 
 GUIDED_DIFFUSION_MODELS = list(diff_model_map.keys())
@@ -181,8 +195,7 @@ class DiscoDiffusion:
             "required": {
                 "text": ("STRING", {"default": DEFAULT_PROMPT, "multiline": True}),
                 "guided_diffusion": ("GUIDED_DIFFUSION_MODEL",),
-                "clip": ("CLIP",),
-                "clip_vision": ("CLIP_VISION",),
+                "guided_clip": ("GUIDED_CLIP",),
                 # Sane defaults:
                 # 1280x768 for 512x512 models
                 # 512x448 for 256x256 models
@@ -190,11 +203,11 @@ class DiscoDiffusion:
                 "height": ("INT", {"default": 768, "min": 64, "max": 2048, "step": 64}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
                 "steps": ("INT", {"default": 250, "min": 1, "max": 10000}),
-                "skip_steps": ("INT", {"default": 10, "min": 1, "max": 10000}),
+                "skip_steps": ("INT", {"default": 0, "min": 0, "max": 10000}),
                 "n_batches": ("INT", {"default": 1, "min": 1, "max": 16}),
                 # "max_frames": ("INT", {"default": 1, "min": 1, "max": 1000}),
                 "sampling_mode": (["plms", "ddim", "stsp", "ltsp"], {"default": "ddim"}),
-                "clip_guidance_scale": ("FLOAT", { "default": 5000, "min": 1, "max": 10000000 }),
+                "clip_guidance_scale": ("FLOAT", { "default": 1500, "min": 1, "max": 10000000 }),
                 "tv_scale": ("FLOAT", { "default": 0, "min": 0, "max": 100000 }),
                 "range_scale": ("FLOAT", { "default": 150, "min": 0, "max": 100000 }),
                 "sat_scale": ("FLOAT", { "default": 0, "min": 0, "max": 100000 }),
@@ -270,8 +283,9 @@ class DiscoDiffusion:
 
         return model, diffusion
 
-    def generate(self, text, guided_diffusion, clip, clip_vision, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
+    def generate(self, text, guided_diffusion, clip, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
                  clip_guidance_scale, tv_scale, range_scale, sat_scale, extra_settings=None):
+        clip_vision = clip # This should be further removed down to the do_run.py
         settings = DiscoDiffusionSettings()
         settings.seed = seed
         settings.steps = steps
@@ -318,8 +332,8 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DiscoDiffusion_OpenAICLIPLoader": "OpenAI CLIP Loader",
+    "DiscoDiffusion_OpenAICLIPLoader": "Guided Diffusion CLIP Loader",
     "DiscoDiffusion_GuidedDiffusionLoader": "Guided Diffusion Loader",
-    "DiscoDiffusion_DiscoDiffusion": "Disco Diffusion",
+    "DiscoDiffusion_DiscoDiffusion": "Disco Diffusion Sampler",
     "DiscoDiffusion_DiscoDiffusionExtraSettings": "Disco Diffusion Extra Settings",
 }
