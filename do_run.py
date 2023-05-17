@@ -338,16 +338,18 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
         image_prompt = []
 
     device = comfy.model_management.get_torch_device()
-
-    if isinstance(clip_vision, ClipVisionModel):
-        clip_vision.model.to(device) # Gets loaded to CPU by comfy, move to GPU
-
+    
     print(f'Frame {frame_num} Prompt: {frame_prompt}')
 
-    clip_models = [clip_model]
+    clip_models = clip_model
 
     model_stats = []
     for clip_model in clip_models:
+    
+        clip_vision = clip_model
+        if isinstance(clip_model, ClipVisionModel):
+            clip_vision = clip_model.model.to(device) # Gets loaded to CPU by comfy, move to GPU
+    
         cutn = args.cutn
         model_stat = {"clip_model": None, "target_embeds": [],
                         "make_cutouts": None, "weights": []}
