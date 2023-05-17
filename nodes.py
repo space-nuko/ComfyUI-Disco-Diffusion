@@ -32,8 +32,23 @@ OPEN_CLIP_MODELS = open_clip.list_pretrained()
 class OpenAICLIPLoader:
     @classmethod
     def INPUT_TYPES(s):
-        open_clip_models = ["_".join(m) for m in OPEN_CLIP_MODELS]
-        return {"required": {"model_name": (OPENAI_CLIP_MODELS + open_clip_models, { "default": "ViT-B/32" }) }}
+        input_map = {"required":{}}
+        clip_models_base = OPENAI_CLIP_MODELS
+        clip_models = OPEN_CLIP_MODELS
+
+        for model in clip_models_base:
+            clip_models.append((model, 'N/A')) # N/A so not to be excluded from openai check below
+        clip_models = sorted(clip_models)
+        
+        for model, author in clip_models:
+            if author in ['openai'] or '/' in model: # Exclude broken openai and duplicates
+                continue
+            if model in ['ViT-B-32', 'ViT-B-16', 'RN50']: # Default DD CLIP Models
+                options = (["True", "False"],)
+            else:
+                options = (["False", "True"],)
+            input_map['required'].update({model: options})
+        return input_map
 
     # These are technically different model formats so don't use them with vanilla nodes!
     RETURN_TYPES = ("CLIP", "CLIP_VISION")
@@ -44,34 +59,29 @@ class OpenAICLIPLoader:
     def __init__(self):
         pass
 
-    def load(self, model_name):
+    def load(self, **clip_model_names):
+    
+        clip_model_names = {key: True if value.lower() == 'true' else False for key, value in clip_model_names.items()}    
+        clip_models = []
+        
         device = comfy.model_management.get_torch_device()
 
-        # For my own notes (because I was confused about this earlier):
-        # DD requires the use of torch.autograd.grad so it can steer the output
-        # image towards CLIP embeddings by calculating loss.
-        # But it's more efficient to run operations on tensors loaded without
-        # support for calculating loss, and most people aren't training models,
-        # they're just running inference.
-        # And "torch.autograd.grad" is a function mostly used for training.
-        # But because (this implementation of) guided diffusion requires
-        # autograd, we have to load the tensors with inference mode off
-        # ourselves (ComfyUI enables it by default for maximum performance).
-        # Same with the guided diffusion model, secondary diffusion model and
-        # sampling code, it all must be loaded/run with support for autograd
-        # (inference mode off).
         with torch.inference_mode(False):
-            if model_name in OPENAI_CLIP_MODELS:
-                download_root = os.path.join(folder_paths.models_dir, "OpenAI-CLIP")
-                clip_model = openai_clip.load(model_name, jit=False, download_root=download_root)[0]
-            else:
-                download_root = os.path.join(folder_paths.models_dir, "OpenCLIP")
-                name, pretrained = model_name.split("_", 1)
-                clip_model = open_clip.create_model(name, pretrained=pretrained, cache_dir=download_root)
+            for model_name, activated in clip_model_names.items():
+                if activated:
+                    print(f'[Disco Diffusion] Loading CLIP model {model_name}')
+                    if model_name in OPENAI_CLIP_MODELS:
+                        clip_model = openai_clip.load(model_name, jit=False)[0]
+                    else:
+                        for model in OPEN_CLIP_MODELS:
+                            if model_name not in model[0]:
+                                continue
+                            name, pretrained = model
+                            clip_model = open_clip.create_model(name, pretrained=pretrained)
+                            clip_model.eval().requires_grad_(False).to(device)
+                    clip_models.append(clip_model)
 
-            clip_model.eval().requires_grad_(False).to(device)
-
-        return (clip_model, clip_model,)
+        return (clip_models, clip_models,)
 
 
 GUIDED_DIFFUSION_MODELS = list(diff_model_map.keys())
@@ -171,10 +181,10 @@ class DiscoDiffusion:
                 "n_batches": ("INT", {"default": 1, "min": 1, "max": 16}),
                 # "max_frames": ("INT", {"default": 1, "min": 1, "max": 1000}),
                 "sampling_mode": (["plms", "ddim", "stsp", "ltsp"], {"default": "ddim"}),
-                "clip_guidance_scale": ("FLOAT", { "default": 5000, "min": 1, "max": 10000000 }),
-                "tv_scale": ("FLOAT", { "default": 0, "min": 0, "max": 100000 }),
-                "range_scale": ("FLOAT", { "default": 150, "min": 0, "max": 100000 }),
-                "sat_scale": ("FLOAT", { "default": 0, "min": 0, "max": 100000 }),
+                "clip_guidance_scale": ("INT", { "default": 5000, "min": 1, "max": 10000000 }),
+                "tv_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
+                "range_scale": ("INT", { "default": 150, "min": 0, "max": 100000 }),
+                "sat_scale": ("INT", { "default": 0, "min": 0, "max": 100000 }),
             },
             "optional": {
                 "extra_settings": ("DISCO_DIFFUSION_EXTRA_SETTINGS",),
