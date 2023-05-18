@@ -40,3 +40,4 @@ The leading number in front of each prompt indicates which step number in the ge
 The trailing number at the end of each prompt is optional and controls the weight of the prompt. You can also have negative weights, but **the sum of all weights cannot equal 0.**
 
 Read the [Disco Diffusion Cheatsheet](https://botbox.dev/disco-diffusion-cheatsheet/) for more information about the parameters available.
+Also check out the [EZ Charts Gudie](https://ezcharts.miraheze.org/wiki/EZ_Charts)
