@@ -153,9 +153,9 @@ def do_run(diffusion, model, clip_model, clip_vision, args: DiscoDiffusionSettin
     for frame_num in range(args.start_frame, args.max_frames):
         if stop_on_next_loop:
             break
-
-        results += run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, frame_num, pbar,
-                                 midas_model, midas_transform, midas_net_w, midas_net_h, midas_resize_mode, midas_normalization)
+        with torch.inference_mode(False):
+            results += run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, frame_num, pbar,
+                                     midas_model, midas_transform, midas_net_w, midas_net_h, midas_resize_mode, midas_normalization)
 
     return results
 
@@ -427,13 +427,14 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                 x_in = out * fac + x * (1 - fac)
                 x_in_grad = torch.zeros_like(x_in)
             else:
-                my_t = torch.ones([n], device=device,
-                                    dtype=torch.long) * cur_t
-                out = diffusion.p_mean_variance(
-                    model, x, my_t, clip_denoised=False, model_kwargs={'y': y})
-                fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
-                x_in = out['pred_xstart'] * fac + x * (1 - fac)
-                x_in_grad = torch.zeros_like(x_in)
+                with torch.inference_mode(False):
+                    my_t = torch.ones([n], device=device,
+                                        dtype=torch.long) * cur_t
+                    out = diffusion.p_mean_variance(
+                        model, x, my_t, clip_denoised=False, model_kwargs={'y': y})
+                    fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
+                    x_in = out['pred_xstart'] * fac + x * (1 - fac)
+                    x_in_grad = torch.zeros_like(x_in)
             for model_stat in model_stats:
                 for i in range(args.cutn_batches):
                     # errors on last step without +1, need to find source
@@ -465,7 +466,8 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
             if args.MS.use_secondary_model is True:
                 range_losses = disco_utils.range_loss(out)
             else:
-                range_losses = disco_utils.range_loss(out['pred_xstart'])
+                with torch.inference_mode(False):
+                    range_losses = disco_utils.range_loss(out['pred_xstart'])
             sat_losses = torch.abs(x_in - x_in.clamp(min=-1, max=1)).mean()
             loss = tv_losses.sum() * args.tv_scale + range_losses.sum() * \
                 args.range_scale + sat_losses.sum() * args.sat_scale
