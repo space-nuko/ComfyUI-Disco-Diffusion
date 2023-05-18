@@ -28,8 +28,9 @@ import open_clip
 OPENAI_CLIP_MODELS = openai_clip.available_models()
 OPEN_CLIP_MODELS = open_clip.list_pretrained()
 
-print("OPENAI_CLIP_MODELS:", OPENAI_CLIP_MODELS)
-print("OPEN_CLIP_MODELS:", OPEN_CLIP_MODELS)
+# Model lists debug for input creation below
+#print("OPENAI_CLIP_MODELS:", OPENAI_CLIP_MODELS)
+#print("OPEN_CLIP_MODELS:", OPEN_CLIP_MODELS)
 
 
 class OpenAICLIPLoader:
@@ -117,7 +118,9 @@ GUIDED_DIFFUSION_MODELS = list(diff_model_map.keys())
 class GuidedDiffusionLoader:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {"model_name": (GUIDED_DIFFUSION_MODELS, { "default": "512x512_diffusion_uncond_finetune_008100" }) }}
+        return {"required": {"model_name": (GUIDED_DIFFUSION_MODELS, { "default": "512x512_diffusion_uncond_finetune_008100" }),
+                            "use_checkpoint": (["True", "False"],),
+                            "use_secondary": (["True", "False"],),}}
 
     # These are technically different model formats so don't use them with vanilla nodes!
     RETURN_TYPES = ("GUIDED_DIFFUSION_MODEL",)
@@ -128,9 +131,12 @@ class GuidedDiffusionLoader:
     def __init__(self):
         pass
 
-    def load(self, model_name):
+    def load(self, model_name, use_checkpoint, use_secondary):
         use_cpu = args.cpu
-        model_settings = ModelSettings(model_name, os.path.join(folder_paths.models_dir, "Disco-Diffusion"))
+        use_checkpoint = True if use_checkpoint == "True" else False
+        use_secondary = True if use_secondary == "True" else False
+        
+        model_settings = ModelSettings(model_name, os.path.join(folder_paths.models_dir, "Disco-Diffusion"), use_checkpoint, use_secondary)
 
         model_settings.setup(use_cpu)
 
