@@ -68,18 +68,18 @@ diff_model_map = {
 
 
 class ModelSettings:
-    def __init__(self, model_name, model_path):
+    def __init__(self, model_name, model_path, use_checkpoint, use_secondary):
         self.model_path = model_path
         #@markdown ####**Models Settings (note: For pixel art, the best is pixelartdiffusion_expanded):**
         self.diffusion_model = model_name #@param ["256x256_diffusion_uncond", "512x512_diffusion_uncond_finetune_008100", "portrait_generator_v001", "pixelartdiffusion_expanded", "pixel_art_diffusion_hard_256", "pixel_art_diffusion_soft_256", "pixelartdiffusion4k", "watercolordiffusion_2", "watercolordiffusion", "PulpSciFiDiffusion", "custom"]
 
-        self.use_secondary_model = True #@param {type: 'boolean'}
+        self.use_secondary_model = use_secondary #@param {type: 'boolean'}
         self.diffusion_sampling_mode = 'ddim' #@param ['plms','ddim']
         #@markdown #####**Custom model:**
         self.custom_path = '/content/drive/MyDrive/deep_learning/ddpm/ema_0.9999_058000.pt'#@param {type: 'string'}
 
         #@markdown #####**CLIP settings:**
-        self.use_checkpoint = True #@param {type: 'boolean'}
+        self.use_checkpoint = use_checkpoint #@param {type: 'boolean'}
         self.ViTB32 = True #@param{type:"boolean"}
         self.ViTB16 = True #@param{type:"boolean"}
         self.ViTL14 = False #@param{type:"boolean"}
