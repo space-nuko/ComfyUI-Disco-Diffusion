@@ -97,7 +97,7 @@ def horiz_symmetry(x):
     [n, c, h, w] = x.size()
     x = torch.concat(
         (x[:, :, :, :w//2], torch.flip(x[:, :, :, :w//2], [-1])), -1)
-    print("horizontal symmetry applied")
+    print("[Disco Diffusion]: horizontal symmetry applied")
     return x
 
 
@@ -105,7 +105,7 @@ def vert_symmetry(x):
     [n, c, h, w] = x.size()
     x = torch.concat(
         (x[:, :, :h//2, :], torch.flip(x[:, :, :h//2, :], [-2])), -2)
-    print("vertical symmetry applied")
+    print("[Disco Diffusion]: vertical symmetry applied")
     return x
 
 
@@ -126,14 +126,15 @@ def get_input_resolution(clip_model):
             # OpenAI
             return clip_model.visual.input_resolution
     except Exception as err:
-        print("Couldn't find clip vision image size! " + str(err) + " " + str(type(clip_model)))
+        # Disable console spam
+        #print("Couldn't find clip vision image size! " + str(err) + " " + str(type(clip_model)))
         return 224
 
 
 def do_run(diffusion, model, clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
     global stop_on_next_loop
 
-    print(range(args.start_frame, args.max_frames))
+    #print(range(args.start_frame, args.max_frames))
 
     pbar = comfy.utils.ProgressBar(diffusion.num_timesteps - args.skip_steps)
 
@@ -298,7 +299,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                 flo_path = f"/{args.flo_folder}/{frame1_path.split('/')[-1]}.npy"
 
                 init_image = 'warped.png'
-                print(args.video_init_flow_blend)
+                #print(args.video_init_flow_blend)
                 weights_path = None
                 if args.video_init_check_consistency:
                     # TBD
@@ -329,7 +330,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
     else:
         frame_prompt = []
 
-    print(args.image_prompts_series)
+    #print(args.image_prompts_series)
     if args.image_prompts_series is not None and frame_num >= len(args.image_prompts_series):
         image_prompt = args.image_prompts_series[-1]
     elif args.image_prompts_series is not None:
@@ -339,7 +340,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
 
     device = comfy.model_management.get_torch_device()
     
-    print(f'Frame {frame_num} Prompt: {frame_prompt}')
+    #print(f'Frame {frame_num} Prompt: {frame_prompt}')
 
     clip_models = clip_model
 
