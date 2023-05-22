@@ -1,4 +1,6 @@
 import os.path
+from PIL import Image
+import numpy as np
 import comfy.model_management
 from comfy.cli_args import args
 import folder_paths
@@ -28,10 +30,11 @@ import open_clip
 OPENAI_CLIP_MODELS = openai_clip.available_models()
 OPEN_CLIP_MODELS = open_clip.list_pretrained()
 
+
 # Model lists debug for input creation below
 #print("OPENAI_CLIP_MODELS:", OPENAI_CLIP_MODELS)
 #print("OPEN_CLIP_MODELS:", OPEN_CLIP_MODELS)
-
+    
 
 class OpenAICLIPLoader:
     @classmethod
@@ -118,9 +121,11 @@ GUIDED_DIFFUSION_MODELS = list(diff_model_map.keys())
 class GuidedDiffusionLoader:
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {"model_name": (GUIDED_DIFFUSION_MODELS, { "default": "512x512_diffusion_uncond_finetune_008100" }),
-                            "use_checkpoint": (["True", "False"],),
-                            "use_secondary": (["True", "False"],),}}
+        return {"required": {
+            "model_name": (GUIDED_DIFFUSION_MODELS, { "default": "512x512_diffusion_uncond_finetune_008100" }),
+            "use_checkpoint": (["True", "False"],),
+            "use_secondary": (["True", "False"],),
+        }}
 
     # These are technically different model formats so don't use them with vanilla nodes!
     RETURN_TYPES = ("GUIDED_DIFFUSION_MODEL",)
@@ -133,10 +138,12 @@ class GuidedDiffusionLoader:
 
     def load(self, model_name, use_checkpoint, use_secondary):
         use_cpu = args.cpu
+        
         use_checkpoint = True if use_checkpoint == "True" else False
         use_secondary = True if use_secondary == "True" else False
         
-        model_settings = ModelSettings(model_name, os.path.join(folder_paths.models_dir, "Disco-Diffusion"), use_checkpoint, use_secondary)
+        with torch.inference_mode(False):
+            model_settings = ModelSettings(model_name, os.path.join(folder_paths.models_dir, "Disco-Diffusion"), use_checkpoint, use_secondary)
 
         model_settings.setup(use_cpu)
 
@@ -147,13 +154,19 @@ class DiscoDiffusionExtraSettings:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
-            "eta": ("FLOAT", { "default": 0.8, "min": 0, "max": 100 }),
+            "eta": ("FLOAT", { "default": 0.8, "min": -1.0, "max": 1.0 }), # I couldn't find any setting breakdowns with a range beyond -1.0 to 1.0
             "cutn": ("INT", { "default": 16, "min": 1, "max": 32 }),
             "cutn_batches": ("INT", { "default": 2, "min": 1, "max": 16 }),
             "cut_overview": ("STRING", { "default": "[12]*400+[4]*600" }),
             "cut_innercut": ("STRING", { "default": "[4]*400+[12]*600" }),
             "cut_ic_pow": ("STRING", { "default": "[1]*1000" }),
             "cut_icgray_p": ("STRING", { "default": "[0.2]*400+[0]*600" }),
+            "clamp_max": ("FLOAT", {"default": 0.05, "min": 0.0, "max": 1.0}),
+            "clip_denoised": (["False","True"],),
+            "perlin_init": (["False","True"],),
+            "perlin_mode": (["mixed","color","gray"],),
+            "use_horizontal_symmetry": (["False","True"],),
+            "use_vertical_symmetry": (["False","True"],),
         }}
 
     # These are technically different model formats so don't use them with vanilla nodes!
@@ -165,7 +178,8 @@ class DiscoDiffusionExtraSettings:
     def __init__(self):
         pass
 
-    def make_settings(self, eta, cutn, cutn_batches, cut_overview, cut_innercut, cut_ic_pow, cut_icgray_p):
+    def make_settings(self, eta, cutn, cutn_batches, cut_overview, cut_innercut, cut_ic_pow, cut_icgray_p, clamp_max, clip_denoised,
+                        perlin_init, perlin_mode, use_horizontal_symmetry, use_vertical_symmetry):
         extra_settings = {
             "eta": eta,
             "cutn": cutn,
@@ -173,7 +187,12 @@ class DiscoDiffusionExtraSettings:
             "cut_overview": cut_overview,
             "cut_innercut": cut_innercut,
             "cut_ic_pow": cut_ic_pow,
-            "cut_icgray_p": cut_icgray_p
+            "cut_icgray_p": cut_icgray_p,
+            "clip_denoised": True if clip_denoised == 'True' else False,
+            "perlin_init": True if perlin_init == 'True' else False,
+            "perlin_mode": perlin_mode if perlin_mode in ['mixed', 'color', 'gray'] else 'mixed',
+            "use_horizontal_symmetry": True if use_horizontal_symmetry == 'True' else False,
+            "use_vertical_symmetry": True if use_vertical_symmetry == 'True' else False,     
         }
 
         return (extra_settings,)
@@ -219,6 +238,7 @@ class DiscoDiffusion:
                 "sat_scale": ("FLOAT", { "default": 0, "min": 0, "max": 100000 }),
             },
             "optional": {
+                "init_image_path": ("STRING", {"default": "", "multiline": False}),
                 "extra_settings": ("DISCO_DIFFUSION_EXTRA_SETTINGS",),
             }
         }
@@ -290,7 +310,7 @@ class DiscoDiffusion:
         return model, diffusion
 
     def generate(self, text, guided_diffusion, guided_clip, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
-                 clip_guidance_scale, tv_scale, range_scale, sat_scale, extra_settings=None):
+                 clip_guidance_scale, tv_scale, range_scale, sat_scale, extra_settings=None, init_image_path=None):
         clip_vision = guided_clip # This should be further removed down to the do_run.py
         settings = DiscoDiffusionSettings()
         settings.seed = seed
@@ -305,16 +325,19 @@ class DiscoDiffusion:
         settings.tv_scale = tv_scale
         settings.range_scale = range_scale
         settings.sat_scale = sat_scale
+        if hasattr(settings, 'init_image'):
+            settings.init_image = init_image_path
+        else:
+            setattr(settings, 'init_image', init_image_path)
         guided_diffusion.diffusion_sampling_mode = sampling_mode
-
+            
+        # Set extra settings
         if extra_settings is not None:
-            settings.eta = extra_settings["eta"]
-            settings.cutn = extra_settings["cutn"]
-            settings.cutn_batches = extra_settings["cutn_batches"]
-            settings.cut_overview = extra_settings["cut_overview"]
-            settings.cut_innercut = extra_settings["cut_innercut"]
-            settings.cut_ic_pow = extra_settings["cut_ic_pow"]
-            settings.cut_icgray_p = extra_settings["cut_icgray_p"]
+            for extra_name, extra_value in extra_settings.items():
+                if hasattr(settings, extra_name):
+                    setattr(settings, extra_name, extra_value)
+                else:
+                    print(f"[Disco Diffusion] The requested extra setting `{extra_name}` is not valid.")
 
         print("[Disco Diffusion] Parsed Prompts:")
         pp(settings.text_prompts)
@@ -323,9 +346,13 @@ class DiscoDiffusion:
 
         # Have to defer loading the model until here since step count isn't
         # known until now
-        model, diffusion = self.load_model(guided_diffusion, settings.steps)
-
-        images = diffuse(model, diffusion, guided_clip, clip_vision, settings, 0)
+        print(f"[Disco Diffusion]: Loading diffusion model {guided_diffusion.diffusion_model}")
+        with torch.inference_mode(False):
+            model, diffusion = self.load_model(guided_diffusion, settings.steps)
+        
+        print("[Disco Diffusion]: Starting diffusion...")
+        with torch.inference_mode(False):
+            images = diffuse(model, diffusion, guided_clip, clip_vision, settings, 0)
 
         return (images,)
 
