@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 import comfy.model_management
 from comfy.cli_args import args
+import folder_paths as comfy_paths
 import folder_paths
 from pprint import pp
 
@@ -31,10 +32,14 @@ OPENAI_CLIP_MODELS = openai_clip.available_models()
 OPEN_CLIP_MODELS = open_clip.list_pretrained()
 
 
-# Model lists debug for input creation below
-#print("OPENAI_CLIP_MODELS:", OPENAI_CLIP_MODELS)
-#print("OPEN_CLIP_MODELS:", OPEN_CLIP_MODELS)
+# Tensor to PIL
+def tensor2pil(image):
+    return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
     
+# PIL to Tensor
+def pil2tensor(image):
+    return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
+
 
 class OpenAICLIPLoader:
     @classmethod
@@ -238,7 +243,7 @@ class DiscoDiffusion:
                 "sat_scale": ("FLOAT", { "default": 0, "min": 0, "max": 100000 }),
             },
             "optional": {
-                "init_image_path": ("STRING", {"default": "", "multiline": False}),
+                "init_image": ("IMAGE",),
                 "extra_settings": ("DISCO_DIFFUSION_EXTRA_SETTINGS",),
             }
         }
@@ -310,7 +315,7 @@ class DiscoDiffusion:
         return model, diffusion
 
     def generate(self, text, guided_diffusion, guided_clip, width, height, seed, steps, skip_steps, n_batches, sampling_mode,
-                 clip_guidance_scale, tv_scale, range_scale, sat_scale, extra_settings=None, init_image_path=None):
+                 clip_guidance_scale, tv_scale, range_scale, sat_scale, extra_settings=None, init_image=None):
         clip_vision = guided_clip # This should be further removed down to the do_run.py
         settings = DiscoDiffusionSettings()
         settings.seed = seed
@@ -325,10 +330,15 @@ class DiscoDiffusion:
         settings.tv_scale = tv_scale
         settings.range_scale = range_scale
         settings.sat_scale = sat_scale
-        if hasattr(settings, 'init_image'):
-            settings.init_image = init_image_path
-        else:
-            setattr(settings, 'init_image', init_image_path)
+        if init_image != None:
+            tmp_path = os.path.join(comfy_paths.temp_directory, 'dd_init_image_temp.png')
+            os.makedirs(comfy_paths.temp_directory, exist_ok=True)
+            tensor2pil(init_image).save(tmp_path)
+            if hasattr(settings, 'init_image'):
+                settings.init_image = tmp_path
+            else:
+                setattr(settings, 'init_image', tmp_path)
+            
         guided_diffusion.diffusion_sampling_mode = sampling_mode
             
         # Set extra settings
