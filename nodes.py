@@ -129,7 +129,7 @@ class GuidedDiffusionLoader:
         return {"required": {
             "model_name": (GUIDED_DIFFUSION_MODELS, { "default": "512x512_diffusion_uncond_finetune_008100" }),
             "use_checkpoint": (["True", "False"],),
-            "use_secondary": (["True", "False"],),
+            #"use_secondary": (["True", "False"],),
         }}
 
     # These are technically different model formats so don't use them with vanilla nodes!
@@ -148,7 +148,7 @@ class GuidedDiffusionLoader:
         use_secondary = True if use_secondary == "True" else False
         
         with torch.inference_mode(False):
-            model_settings = ModelSettings(model_name, os.path.join(folder_paths.models_dir, "Disco-Diffusion"), use_checkpoint, use_secondary)
+            model_settings = ModelSettings(model_name, os.path.join(folder_paths.models_dir, "Disco-Diffusion"), use_checkpoint, use_secondary='True')
 
         model_settings.setup(use_cpu)
 
