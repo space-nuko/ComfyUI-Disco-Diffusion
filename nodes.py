@@ -141,7 +141,7 @@ class GuidedDiffusionLoader:
     def __init__(self):
         pass
 
-    def load(self, model_name, use_checkpoint, use_secondary):
+    def load(self, model_name, use_checkpoint, use_secondary=False):
         use_cpu = args.cpu
         
         use_checkpoint = True if use_checkpoint == "True" else False
