@@ -68,18 +68,18 @@ diff_model_map = {
 
 
 class ModelSettings:
-    def __init__(self, model_name, model_path):
+    def __init__(self, model_name, model_path, use_checkpoint, use_secondary):
         self.model_path = model_path
         #@markdown ####**Models Settings (note: For pixel art, the best is pixelartdiffusion_expanded):**
         self.diffusion_model = model_name #@param ["256x256_diffusion_uncond", "512x512_diffusion_uncond_finetune_008100", "portrait_generator_v001", "pixelartdiffusion_expanded", "pixel_art_diffusion_hard_256", "pixel_art_diffusion_soft_256", "pixelartdiffusion4k", "watercolordiffusion_2", "watercolordiffusion", "PulpSciFiDiffusion", "custom"]
 
-        self.use_secondary_model = True #@param {type: 'boolean'}
+        self.use_secondary_model = use_secondary #@param {type: 'boolean'}
         self.diffusion_sampling_mode = 'ddim' #@param ['plms','ddim']
         #@markdown #####**Custom model:**
         self.custom_path = '/content/drive/MyDrive/deep_learning/ddpm/ema_0.9999_058000.pt'#@param {type: 'string'}
 
         #@markdown #####**CLIP settings:**
-        self.use_checkpoint = True #@param {type: 'boolean'}
+        self.use_checkpoint = use_checkpoint #@param {type: 'boolean'}
         self.ViTB32 = True #@param{type:"boolean"}
         self.ViTB16 = True #@param{type:"boolean"}
         self.ViTL14 = False #@param{type:"boolean"}
@@ -130,24 +130,24 @@ class ModelSettings:
         model_local_path = os.path.join(self.model_path, model_filename)
         if os.path.exists(model_local_path):
             if self.check_model_SHA:
-                print(f"Checking {model_filename} SHA256 Hash...")
+                #print(f"Checking {model_filename} SHA256 Hash...")
                 if self.check_sha_hash(diffusion_model_name, model_local_path):
-                    print(f'{diffusion_model_name} SHA256 matches.')
+                    #print(f'{diffusion_model_name} SHA256 matches.')
                     diff_model_map[diffusion_model_name]['downloaded'] = True
                 else:
                     print(f"{diffusion_model_name} SHA doesn't match. Will redownload it...")
                     os.remove(model_local_path)
                     return self.download_model(diffusion_model_name)
-            print(f"{model_filename} \033[32malready downloaded.\033[0;0m")
+            #print(f"{model_filename} \033[32malready downloaded.\033[0;0m")
         else:
             for model_uri in diff_model_map[diffusion_model_name]['uri_list']:
                 print(f"Downloading {diffusion_model_name} from: {model_uri}")
                 disco_utils.pyget(model_uri, self.model_path)
                 if os.path.exists(model_local_path):
                     if self.check_model_SHA:
-                        print(f"Checking {model_filename} SHA256 Hash...")
+                        #print(f"Checking {model_filename} SHA256 Hash...")
                         if self.check_sha_hash(diffusion_model_name, model_local_path):
-                            print(f'{diffusion_model_name} SHA256 matches.')
+                            #print(f'{diffusion_model_name} SHA256 matches.')
                             diff_model_map[diffusion_model_name]['downloaded'] = True
                             print(f"{diffusion_model_name} \033[32mdownloaded successfully.\033[0;0m")
                             return

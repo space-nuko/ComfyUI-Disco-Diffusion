@@ -104,7 +104,7 @@ def diffuse(model, diffusion, clip_model, clip_vision, args: DiscoDiffusionSetti
         while os.path.isfile(f"{args.batchFolder}/{args.batch_name}({batchNum})_settings.txt") or os.path.isfile(f"{args.batchFolder}/{args.batch_name}-{batchNum}_settings.txt"):
             batchNum += 1
 
-    print(f'Starting Run: {args.batch_name}({batchNum}) at frame {start_frame}')
+    #print(f'Starting Run: {args.batch_name}({batchNum}) at frame {start_frame}')
 
     if args.set_seed == 'random_seed':
         random.seed()
@@ -249,7 +249,7 @@ def diffuse(model, diffusion, clip_model, clip_vision, args: DiscoDiffusionSetti
         except KeyboardInterrupt:
             pass
         finally:
-            print('Seed used:', seed)
+            #print('Seed used:', seed)
             gc.collect()
             torch.cuda.empty_cache()
 

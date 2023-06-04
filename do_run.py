@@ -97,7 +97,7 @@ def horiz_symmetry(x):
     [n, c, h, w] = x.size()
     x = torch.concat(
         (x[:, :, :, :w//2], torch.flip(x[:, :, :, :w//2], [-1])), -1)
-    print("horizontal symmetry applied")
+    print("[Disco Diffusion]: horizontal symmetry applied")
     return x
 
 
@@ -105,7 +105,7 @@ def vert_symmetry(x):
     [n, c, h, w] = x.size()
     x = torch.concat(
         (x[:, :, :h//2, :], torch.flip(x[:, :, :h//2, :], [-2])), -2)
-    print("vertical symmetry applied")
+    print("[Disco Diffusion]: vertical symmetry applied")
     return x
 
 
@@ -126,14 +126,15 @@ def get_input_resolution(clip_model):
             # OpenAI
             return clip_model.visual.input_resolution
     except Exception as err:
-        print("Couldn't find clip vision image size! " + str(err) + " " + str(type(clip_model)))
+        # Disable console spam
+        #print("Couldn't find clip vision image size! " + str(err) + " " + str(type(clip_model)))
         return 224
 
 
 def do_run(diffusion, model, clip_model, clip_vision, args: DiscoDiffusionSettings, batchNum):
     global stop_on_next_loop
 
-    print(range(args.start_frame, args.max_frames))
+    #print(range(args.start_frame, args.max_frames))
 
     pbar = comfy.utils.ProgressBar(diffusion.num_timesteps - args.skip_steps)
 
@@ -153,9 +154,9 @@ def do_run(diffusion, model, clip_model, clip_vision, args: DiscoDiffusionSettin
     for frame_num in range(args.start_frame, args.max_frames):
         if stop_on_next_loop:
             break
-
-        results += run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, frame_num, pbar,
-                                 midas_model, midas_transform, midas_net_w, midas_net_h, midas_resize_mode, midas_normalization)
+        with torch.inference_mode(False):
+            results += run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, frame_num, pbar,
+                                     midas_model, midas_transform, midas_net_w, midas_net_h, midas_resize_mode, midas_normalization)
 
     return results
 
@@ -298,7 +299,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                 flo_path = f"/{args.flo_folder}/{frame1_path.split('/')[-1]}.npy"
 
                 init_image = 'warped.png'
-                print(args.video_init_flow_blend)
+                #print(args.video_init_flow_blend)
                 weights_path = None
                 if args.video_init_check_consistency:
                     # TBD
@@ -329,7 +330,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
     else:
         frame_prompt = []
 
-    print(args.image_prompts_series)
+    #print(args.image_prompts_series)
     if args.image_prompts_series is not None and frame_num >= len(args.image_prompts_series):
         image_prompt = args.image_prompts_series[-1]
     elif args.image_prompts_series is not None:
@@ -338,16 +339,18 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
         image_prompt = []
 
     device = comfy.model_management.get_torch_device()
+    
+    #print(f'Frame {frame_num} Prompt: {frame_prompt}')
 
-    if isinstance(clip_vision, ClipVisionModel):
-        clip_vision.model.to(device) # Gets loaded to CPU by comfy, move to GPU
-
-    print(f'Frame {frame_num} Prompt: {frame_prompt}')
-
-    clip_models = [clip_model]
+    clip_models = clip_model
 
     model_stats = []
     for clip_model in clip_models:
+    
+        clip_vision = clip_model
+        if isinstance(clip_model, ClipVisionModel):
+            clip_vision = clip_model.model.to(device) # Gets loaded to CPU by comfy, move to GPU
+    
         cutn = args.cutn
         model_stat = {"clip_model": None, "target_embeds": [],
                         "make_cutouts": None, "weights": []}
@@ -425,13 +428,14 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
                 x_in = out * fac + x * (1 - fac)
                 x_in_grad = torch.zeros_like(x_in)
             else:
-                my_t = torch.ones([n], device=device,
-                                    dtype=torch.long) * cur_t
-                out = diffusion.p_mean_variance(
-                    model, x, my_t, clip_denoised=False, model_kwargs={'y': y})
-                fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
-                x_in = out['pred_xstart'] * fac + x * (1 - fac)
-                x_in_grad = torch.zeros_like(x_in)
+                with torch.inference_mode(False):
+                    my_t = torch.ones([n], device=device,
+                                        dtype=torch.long) * cur_t
+                    out = diffusion.p_mean_variance(
+                        model, x, my_t, clip_denoised=False, model_kwargs={'y': y})
+                    fac = diffusion.sqrt_one_minus_alphas_cumprod[cur_t]
+                    x_in = out['pred_xstart'] * fac + x * (1 - fac)
+                    x_in_grad = torch.zeros_like(x_in)
             for model_stat in model_stats:
                 for i in range(args.cutn_batches):
                     # errors on last step without +1, need to find source
@@ -463,7 +467,8 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
             if args.MS.use_secondary_model is True:
                 range_losses = disco_utils.range_loss(out)
             else:
-                range_losses = disco_utils.range_loss(out['pred_xstart'])
+                with torch.inference_mode(False):
+                    range_losses = disco_utils.range_loss(out['pred_xstart'])
             sat_losses = torch.abs(x_in - x_in.clamp(min=-1, max=1)).mean()
             loss = tv_losses.sum() * args.tv_scale + range_losses.sum() * \
                 args.range_scale + sat_losses.sum() * args.sat_scale
