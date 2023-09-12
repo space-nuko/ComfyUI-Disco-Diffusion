@@ -7,3 +7,4 @@ datetime
 pandas
 opencv-python
 regex
+ftfy
