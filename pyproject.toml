@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-disco-diffusion"
+description = "Modularized version of Disco Diffusion for use with ComfyUI."
+version = "1.0.0"
+license = "LICENSE"
+dependencies = ["lpips", "datetime", "imageio", "imageio-ffmpeg==0.4.4", "lpips", "datetime", "pandas", "opencv-python", "regex"]
+
+[project.urls]
+Repository = "https://github.com/space-nuko/ComfyUI-Disco-Diffusion"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-Disco-Diffusion"
+Icon = ""
