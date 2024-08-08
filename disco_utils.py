@@ -81,16 +81,16 @@ def create_perlin_noise(side_x, side_y, octaves=[1, 1, 1, 1], width=2, height=2,
     out = ImageOps.autocontrast(out)
     return out
 
-def regen_perlin(perlin_mode, batch_size, expand=False):
+def regen_perlin(side_x, side_y, perlin_mode, batch_size, expand=False):
     if perlin_mode == 'color':
-        init = create_perlin_noise([1.5**-i*0.5 for i in range(12)], 1, 1, False)
-        init2 = create_perlin_noise([1.5**-i*0.5 for i in range(8)], 4, 4, False)
+        init = create_perlin_noise(side_x, side_y, [1.5**-i*0.5 for i in range(12)], 1, 1, False)
+        init2 = create_perlin_noise(side_x, side_y, [1.5**-i*0.5 for i in range(8)], 4, 4, False)
     elif perlin_mode == 'gray':
-        init = create_perlin_noise([1.5**-i*0.5 for i in range(12)], 1, 1, True)
-        init2 = create_perlin_noise([1.5**-i*0.5 for i in range(8)], 4, 4, True)
+        init = create_perlin_noise(side_x, side_y, [1.5**-i*0.5 for i in range(12)], 1, 1, True)
+        init2 = create_perlin_noise(side_x, side_y, [1.5**-i*0.5 for i in range(8)], 4, 4, True)
     else:
-        init = create_perlin_noise([1.5**-i*0.5 for i in range(12)], 1, 1, False)
-        init2 = create_perlin_noise([1.5**-i*0.5 for i in range(8)], 4, 4, True)
+        init = create_perlin_noise(side_x, side_y, [1.5**-i*0.5 for i in range(12)], 1, 1, False)
+        init2 = create_perlin_noise(side_x, side_y, [1.5**-i*0.5 for i in range(8)], 4, 4, True)
 
     device = comfy.model_management.get_torch_device()
     init = TF.to_tensor(init).add(TF.to_tensor(init2)).div(2).to(device).unsqueeze(0).mul(2).sub(1)

@@ -407,7 +407,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
         init = TF.to_tensor(init).to(device).unsqueeze(0).mul(2).sub(1)
 
     if args.perlin_init:
-        init = disco_utils.regen_perlin(args.perlin_mode, args.batch_size)
+        init = disco_utils.regen_perlin(args.side_x, args.side_y, args.perlin_mode, args.batch_size)
 
     cur_t = None
 
@@ -514,7 +514,7 @@ def run_one_frame(diffusion, model, clip_model, clip_vision, args, batchNum, fra
 
         if args.perlin_init:
             init = disco_utils.regen_perlin(
-                args.perlin_mode, args.batch_size, True)
+                args.side_x, args.side_y, args.perlin_mode, args.batch_size, True)
 
         symmetry_transformation_fn = id
         if args.use_horizontal_symmetry:

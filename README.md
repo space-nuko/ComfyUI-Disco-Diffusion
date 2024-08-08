@@ -6,7 +6,7 @@ This repo holds a modularized version of [Disco Diffusion](https://github.com/al
 
 ## Installation
 
-1. Clone this repository into your `ComfyUI/custom_nodes` folder with `git clone --recursive https://github.com/space-nuko/ComfyUI-Disco-Diffusion`.
+1. Clone this repository into your `ComfyUI/custom_nodes` folder with `git clone --recursive https://github.com/HerzogVonWiesel/ComfyUI-Disco-Diffusion`.
 2. Activate the virtualenv you use with ComfyUI.
 3. Navigate to the cloned folder and run `pip install -r requirements.txt`.
 4. Start ComfyUI.
